@@ -1,19 +1,10 @@
 import figure
 import constants
-import q_learning
-import time
 import numpy as np
 import copy
 
 class Tetris:
     def __init__(self, height, width):
-        self.level = 1
-        self.score = 0
-        self.oldscore = 0
-        self.state = "start"
-        self.field = []
-        self.height = 0
-        self.width = 0
         self.x = 100
         self.y = 60
         self.zoom = 20
@@ -23,7 +14,6 @@ class Tetris:
         self.height = height
         self.width = width
         self.field = []
-        self.score = 0
         self.clearedlines = 0
         self.state = "start"
         self.commands = {
@@ -42,7 +32,6 @@ class Tetris:
         if self.respawn:
             self.figure = self.next_figure
             self.next_figure = figure.Figure(3, 0)
-            self.oldscore = self.score
             states, fitness = self.get_next_states()
             self.execute_opt_move(fitness)
 
@@ -82,28 +71,9 @@ class Tetris:
                 perfect = False
         if lines > 0:
             self.clearedlines += lines
-            for i in range(5):
-                if self.level <= constants.score_table[i][0] and not perfect:
-                    self.score += constants.score_table[i][lines]
-                    break
-                if self.level <= constants.score_table[i][0] and perfect:
-                    self.score += constants.score_table[i][lines]*10
-                    break
-            if self.clearedlines >= 10*self.level:
-                self.level += 1
             
 
     def go_space(self):
-        if self.state == "start":
-            #self.figure.actionlist[self.get_field()] = 3 #space
-            while not self.intersects():
-                self.figure.y += 1
-                self.figure.droppedlines += 2
-            self.figure.y -= 1
-            self.freeze()
-
-    # no effect on q table, no score points
-    def go_space2(self):
         if self.state == "start":
             while not self.intersects():
                 self.figure.y += 1
@@ -113,21 +83,8 @@ class Tetris:
     def go_down(self):
         if self.state == "start":
             self.figure.y += 1
-            self.figure.droppedlines += 1
             if self.intersects():
                 self.figure.y -= 1
-                self.freeze()
-                #return time.time()
-        return None
-    
-    # used when block has already reached bottom, in case the block is moved in a way that it can fall again. Resets freezetimer
-    def go_down2(self):
-        if self.state == "start":
-            self.figure.y += 1
-            if self.intersects():
-                self.figure.y -= 1
-            else:
-            #    self.figure.freezetimer = None
                 self.freeze()
 
     def go_up(self):
@@ -141,11 +98,8 @@ class Tetris:
         for i in range(4):
             for j in range(4):
                 if i * 4 + j in self.figure.image():
-                    #self.field[i + self.figure.y][j + self.figure.x] = self.figure.color + 1
                     self.field[i + self.figure.y][j + self.figure.x] = len(constants.colors)
-        self.score += self.figure.droppedlines * ((self.level // 2) + 1)
         self.break_lines()
-        #q_learning.q_update(self.figure.actionlist, self.state, self.score-self.oldscore)
         self.new_figure()
         if self.intersects():
             self.state = "gameover"
@@ -158,16 +112,13 @@ class Tetris:
                 self.figure.x = old_x
 
     def go_left(self):
-        #self.figure.actionlist[self.get_field()] = 1 #left
         self.go_side(-1)
 
     def go_right(self):
-        #self.figure.actionlist[self.get_field()] = 2 #right
         self.go_side(1)
 
     def rotate(self):
         if self.state == "start":
-            old_field = self.get_field()
             old_rotation = self.figure.rotation
             self.figure.rotate()
             # Try to move tile left and right once to enable rotating at the edge
@@ -184,9 +135,6 @@ class Tetris:
                         self.go_side(-2)
                         if self.intersects():
                             self.figure.rotation = old_rotation
-        # Rotation successful
-        #if self.figure.rotation != old_rotation:
-        #    self.figure.actionlist[old_field] = 0 #rotate
         
     # Adds current block to field
     def get_field(self):

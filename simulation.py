@@ -1,10 +1,6 @@
 import pygame
 import constants
 import game
-import random
-import matplotlib.pyplot as plt
-import time
-import q_learning
 
 def run_game():
     pygame.display.set_caption("Tetris")
@@ -25,27 +21,7 @@ def run_game():
             counter = 0
         if counter % (constants.FPS) == 0 or pressing_down:
             tetris.go_down()
-        #if counter % (constants.MOVE_FPS) == 0:
-        #    rand_move = random.choice(["up", "left", "right", "space"])
-        #    tetris.commands[rand_move]()
-
-        #if counter % (constants.FPS) == 0 or pressing_down:
-        #    if tetris.figure.freezetimer is None:
-        #        tetris.figure.freezetimer = tetris.go_down()
-        #    else: 
-        #        tetris.go_down2()
-        #    if tetris.figure.freezetimer is not None and tetris.figure.spacetimer is None:
-        #        tetris.figure.spacetimer = tetris.figure.freezetimer
-        # Enables moving when the block has reached the bottom for 1 second. Resets if the block can fall again
-        #if tetris.figure.freezetimer is not None:
-        #    if time.time() > tetris.figure.freezetimer + 1:
-        #        tetris.go_space2()
-        # Prevents infinite spinning, drops block 4 seconds after reaching the bottom once, even if the block can fall again
-        #if tetris.figure.spacetimer is not None:
-        #    if time.time() > tetris.figure.spacetimer + 4:
-        #        tetris.go_space2()
-        #if tetris.level > constants.MAX_LVL:
-        #    done = True
+        
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -107,27 +83,21 @@ def run_game():
                                         tetris.zoom - 2, tetris.zoom - 2], 1)
 
         font = pygame.font.SysFont('Calibri', 25, True, False)
-        scoretext = font.render("Score: " + str(tetris.score), True, constants.BLACK)
-        linestext = font.render("Lines: " + str(tetris.clearedlines), True, constants.BLACK)
-        leveltext = font.render("Level: " + str(tetris.level), True, constants.BLACK)
+        linestext = font.render("Lines cleared: " + str(tetris.clearedlines), True, constants.BLACK)
         font1 = pygame.font.SysFont('Calibri', 65, True, False)
         text_game_over = font1.render("Game Over", True, (255, 125, 0))
         text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
 
-        screen.blit(scoretext, [0, 0])
-        screen.blit(linestext, [0, 30])
-        screen.blit(leveltext, [constants.SIZE[0]-80, 0])
+        screen.blit(linestext, [0, 0])
         if tetris.state == "gameover":
             screen.blit(text_game_over, [20, 200])
             screen.blit(text_game_over1, [25, 265])
-            print(len(q_learning.q_table))
 
         pygame.display.flip()
         clock.tick(constants.FPS)    
-    return tetris.score
+    return tetris.clearedlines
 
 def simulate(sim_length):
-    games = list((range(0, sim_length)))
     game_labels = []
     scores = []
     # Initialize the game engine
@@ -139,8 +109,4 @@ def simulate(sim_length):
         game_labels.append("Game " + str(game_nr+1))
         print("Game " + str(game_nr+1) + ": " + str(score))
     pygame.quit()
-    #plt.bar(games, scores, label=game_labels, color="red")
-    #plt.xlabel("Games")
-    #plt.ylabel("Score")
-    #plt.show()
 simulate(1)
