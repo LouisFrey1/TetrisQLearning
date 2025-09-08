@@ -32,7 +32,7 @@ class Tetris:
         if self.respawn:
             self.figure = self.next_figure
             self.next_figure = figure.Figure(3, 0)
-            states, fitness = self.get_next_states()
+            fitness = self.get_next_states_fitness()
             self.execute_opt_move(fitness)
 
     def pause(self):
@@ -175,7 +175,7 @@ class Tetris:
         bumpiness, height = self.get_bumpiness()
         return holes, bumpiness, height
     
-    def get_next_states(self):
+    def get_next_states_fitness(self):
         states = {}
         fitness = {}
         num_rotations = len(constants.figures[self.figure.type])
@@ -195,22 +195,15 @@ class Tetris:
                 holes, bumpiness, height = simulated_game.get_state()
                 state = tuple([height, cleared_lines, holes, bumpiness])
                 fitness[(x, i)] = self.get_fitness(state)
-                states[(x, i)] = state
-        return states, fitness
+        return fitness
     
     def execute_opt_move(self, fitness):
         (x, rotation) = max(fitness, key=fitness.get)
-        print(x, rotation)
         for _ in range(rotation):
             self.rotate()
-        
-        movement = x - self.figure.x - self.figure.get_start()
-        if movement > 0:
-            for _ in range(movement):
-                self.go_right()
-        else:
-            for _ in range(-movement):
-                self.go_left()
+        for _ in range(5):
+            self.go_left()
+        self.go_side(x)
 
     def get_fitness(self, state):
         return -0.510066*state[0] + 0.760666*state[1] - 0.35663*state[2] - 0.184483*state[3]

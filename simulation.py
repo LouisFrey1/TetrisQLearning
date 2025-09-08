@@ -19,9 +19,8 @@ def run_game():
         counter += 1
         if counter > 100000:
             counter = 0
-        if counter % (constants.FPS) == 0 or pressing_down:
-            tetris.go_down()
-        
+        if counter % (constants.FPS // 4) == 0 or pressing_down:
+            tetris.go_space()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
