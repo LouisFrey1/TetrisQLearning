@@ -1,5 +1,8 @@
 import random
 import constants
+import numpy as np
+
+
 
 class Figure:
     x = 0
@@ -16,9 +19,26 @@ class Figure:
         self.spacetimer = None
         self.actionlist = {}
 
+    
+    
     def image(self):
         return constants.figures[self.type][self.rotation]
 
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(constants.figures[self.type])
 
+    def get_start(self):
+        temp = np.array(self.image())
+        temp = temp % 4
+        return np.min(temp)
+
+    def get_end(self):
+        temp = np.array(self.image())
+        temp = temp % 4
+        return np.max(temp)
+
+    def get_length(self):
+        temp = np.array(self.image())
+        temp = temp % 4
+        length = np.max(temp) - np.min(temp) + 1
+        return length
