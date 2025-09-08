@@ -17,32 +17,35 @@ def run_game():
     pressing_down = False
     counter = 0
 
-    while tetris.state == "start" and not done:
+    while tetris.state != "gameover" and not done:
         if tetris.figure is None:
             tetris.new_figure()
         counter += 1
         if counter > 100000:
             counter = 0
+        if counter % (constants.FPS) == 0 or pressing_down:
+            tetris.go_down()
         #if counter % (constants.MOVE_FPS) == 0:
         #    rand_move = random.choice(["up", "left", "right", "space"])
         #    tetris.commands[rand_move]()
-        if counter % (constants.FPS - tetris.level) == 0 or pressing_down:
-            if tetris.figure.freezetimer is None:
-                tetris.figure.freezetimer = tetris.go_down()
-            else: 
-                tetris.go_down2()
-            if tetris.figure.freezetimer is not None and tetris.figure.spacetimer is None:
-                tetris.figure.spacetimer = tetris.figure.freezetimer
+
+        #if counter % (constants.FPS) == 0 or pressing_down:
+        #    if tetris.figure.freezetimer is None:
+        #        tetris.figure.freezetimer = tetris.go_down()
+        #    else: 
+        #        tetris.go_down2()
+        #    if tetris.figure.freezetimer is not None and tetris.figure.spacetimer is None:
+        #        tetris.figure.spacetimer = tetris.figure.freezetimer
         # Enables moving when the block has reached the bottom for 1 second. Resets if the block can fall again
-        if tetris.figure.freezetimer is not None:
-            if time.time() > tetris.figure.freezetimer + 1:
-                tetris.go_space2()
+        #if tetris.figure.freezetimer is not None:
+        #    if time.time() > tetris.figure.freezetimer + 1:
+        #        tetris.go_space2()
         # Prevents infinite spinning, drops block 4 seconds after reaching the bottom once, even if the block can fall again
-        if tetris.figure.spacetimer is not None:
-            if time.time() > tetris.figure.spacetimer + 4:
-                tetris.go_space2()
-        if tetris.level > constants.MAX_LVL:
-            done = True
+        #if tetris.figure.spacetimer is not None:
+        #    if time.time() > tetris.figure.spacetimer + 4:
+        #        tetris.go_space2()
+        #if tetris.level > constants.MAX_LVL:
+        #    done = True
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -60,6 +63,8 @@ def run_game():
                     tetris.go_space()
                 if event.key == pygame.K_ESCAPE:
                     tetris.__init__(20, 10)
+                if event.key == pygame.K_p:
+                    tetris.pause()
 
             if event.type == pygame.KEYUP:
                     if event.key == pygame.K_DOWN:
@@ -72,7 +77,7 @@ def run_game():
             for j in range(tetris.width):
                 pygame.draw.rect(screen, constants.GRAY, [tetris.x + tetris.zoom * j, tetris.y + tetris.zoom * i, tetris.zoom, tetris.zoom], 1)
                 if tetris.field[i][j] > 0:
-                    pygame.draw.rect(screen, constants.colors[tetris.field[i][j]-1],
+                    pygame.draw.rect(screen, constants.GRAY,
                                     [tetris.x + tetris.zoom * j + 1, tetris.y + tetris.zoom * i + 1, tetris.zoom - 2, tetris.zoom - 1])
 
         # Draws current block
@@ -85,6 +90,21 @@ def run_game():
                                         [tetris.x + tetris.zoom * (j + tetris.figure.x) + 1,
                                         tetris.y + tetris.zoom * (i + tetris.figure.y) + 1,
                                         tetris.zoom - 2, tetris.zoom - 2])
+                        
+        # Draws next block
+        if tetris.next_figure is not None:
+            for i in range(4):
+                for j in range(4):
+                    p = i * 4 + j
+                    if p in tetris.next_figure.image():
+                        pygame.draw.rect(screen, constants.colors[tetris.next_figure.color],
+                                        [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_figure.x) + 1,
+                                        tetris.y + tetris.zoom * (i + tetris.next_figure.y) + 1,
+                                        tetris.zoom - 2, tetris.zoom - 2])
+                        pygame.draw.rect(screen, constants.GRAY, 
+                                        [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_figure.x) + 1,
+                                        tetris.y + tetris.zoom * (i + tetris.next_figure.y) + 1,
+                                        tetris.zoom - 2, tetris.zoom - 2], 1)
 
         font = pygame.font.SysFont('Calibri', 25, True, False)
         scoretext = font.render("Score: " + str(tetris.score), True, constants.BLACK)
