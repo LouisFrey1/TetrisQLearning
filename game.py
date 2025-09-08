@@ -3,7 +3,7 @@ import constants
 import q_learning
 import time
 import numpy as np
-
+import copy
 
 class Tetris:
     def __init__(self, height, width):
@@ -18,7 +18,8 @@ class Tetris:
         self.y = 60
         self.zoom = 20
         self.figure = None
-    
+        self.next_figure = figure.Figure(3, 0)
+        self.respawn = True
         self.height = height
         self.width = width
         self.field = []
@@ -38,20 +39,30 @@ class Tetris:
             self.field.append(new_line)
 
     def new_figure(self):
-        self.figure = figure.Figure(3, 0)
-        self.oldscore = self.score
+        if self.respawn:
+            self.figure = self.next_figure
+            self.next_figure = figure.Figure(3, 0)
+            self.oldscore = self.score
+            states, fitness = self.get_next_states()
+            self.execute_opt_move(fitness)
+
+    def pause(self):
+        if self.state == "start":
+            self.state = "pause"
+        elif self.state == "pause":
+            self.state = "start"
         
 
     def intersects(self):
         intersection = False
-        for i in range(4):
-            for j in range(4):
-                if i * 4 + j in self.figure.image():
-                    if i + self.figure.y > self.height - 1 or \
-                            j + self.figure.x > self.width - 1 or \
-                            j + self.figure.x < 0 or \
-                            self.field[i + self.figure.y][j + self.figure.x] > 0:
-                        intersection = True
+        for square in self.figure.image():
+            i = square // 4
+            j = square % 4
+            if i + self.figure.y > self.height - 1 or \
+                    j + self.figure.x > self.width - 1 or \
+                    j + self.figure.x < 0 or \
+                    self.field[i + self.figure.y][j + self.figure.x] > 0:
+                intersection = True
         return intersection
 
     def break_lines(self):
@@ -84,7 +95,7 @@ class Tetris:
 
     def go_space(self):
         if self.state == "start":
-            self.figure.actionlist[self.get_state()] = 3 #space
+            #self.figure.actionlist[self.get_field()] = 3 #space
             while not self.intersects():
                 self.figure.y += 1
                 self.figure.droppedlines += 2
@@ -105,8 +116,8 @@ class Tetris:
             self.figure.droppedlines += 1
             if self.intersects():
                 self.figure.y -= 1
-                #self.freeze()
-                return time.time()
+                self.freeze()
+                #return time.time()
         return None
     
     # used when block has already reached bottom, in case the block is moved in a way that it can fall again. Resets freezetimer
@@ -116,8 +127,8 @@ class Tetris:
             if self.intersects():
                 self.figure.y -= 1
             else:
-                self.figure.freezetimer = None
-        
+            #    self.figure.freezetimer = None
+                self.freeze()
 
     def go_up(self):
         if self.state == "start":
@@ -134,7 +145,7 @@ class Tetris:
                     self.field[i + self.figure.y][j + self.figure.x] = len(constants.colors)
         self.score += self.figure.droppedlines * ((self.level // 2) + 1)
         self.break_lines()
-        q_learning.q_update(self.figure.actionlist, self.state, self.score-self.oldscore)
+        #q_learning.q_update(self.figure.actionlist, self.state, self.score-self.oldscore)
         self.new_figure()
         if self.intersects():
             self.state = "gameover"
@@ -147,24 +158,25 @@ class Tetris:
                 self.figure.x = old_x
 
     def go_left(self):
-        self.figure.actionlist[self.get_state()] = 1 #left
+        #self.figure.actionlist[self.get_field()] = 1 #left
         self.go_side(-1)
 
     def go_right(self):
-        self.figure.actionlist[self.get_state()] = 2 #right
+        #self.figure.actionlist[self.get_field()] = 2 #right
         self.go_side(1)
 
     def rotate(self):
         if self.state == "start":
+            old_field = self.get_field()
             old_rotation = self.figure.rotation
             self.figure.rotate()
             # Try to move tile left and right once to enable rotating at the edge
             if self.intersects():
                 self.go_up()
                 if self.intersects():
-                    self.go_left()
+                    self.go_side(-1)
                     if self.intersects():
-                        self.go_right()
+                        self.go_side(1)
                         if self.intersects() and self.figure.type != 0:
                             self.figure.rotation = old_rotation
                     # I-Block needs to be moved left twice when rotated at the right edge
@@ -173,41 +185,92 @@ class Tetris:
                         if self.intersects():
                             self.figure.rotation = old_rotation
         # Rotation successful
-        if self.figure.rotation != old_rotation:
-            self.figure.actionlist[self.get_state()] = 0 #rotate
+        #if self.figure.rotation != old_rotation:
+        #    self.figure.actionlist[old_field] = 0 #rotate
+        
+    # Adds current block to field
+    def get_field(self):
+        total_field = np.array(self.field)
+        x = self.figure.x
+        y = self.figure.y
+        for i in self.figure.image():
+            total_field[y+i//4][x+i%4] = 1
+        return total_field
         
 
+    def get_holes(self):
+        holes = 0
+        for j in range(self.width):
+            i = 0
+            while i < self.height and self.field[i][j] == 0:
+                i += 1
+            while i < self.height:
+                if self.field[i][j] == 0:
+                    holes += 1
+                i += 1
+        return holes
+
+    def get_bumpiness(self):
+        column_heights = np.zeros(self.width)
+        for j in range(self.width):
+            for i in range(self.height):
+                if self.field[i][j] == len(constants.colors):
+                    column_heights[j] = self.height - i
+                    break
+        total_height = np.sum(column_heights)
+        bumpiness = np.abs(column_heights[:-1] - column_heights[1:])
+        total_bumpiness = np.sum(bumpiness)
+        return total_bumpiness, total_height
+    
     def get_state(self):
-        column_heights = [0,0,0,0,0,0,0,0,0,0]
-        bumpiness = [0,0,0,0,0,0,0,0,0]
-        #column_holes = [0,0,0,0,0,0,0,0,0,0]
-        for j in range(self.width):
-            for i in range(self.height):
-                if column_heights[j] == 0 and self.field[i][j] == len(constants.colors):
-                    column_heights[j] = self.height - i
-                #elif column_heights[j] != 0 and self.field[i][j] == 0:
-                #    column_holes[j] += 1
-        #total_holes = sum(column_holes)
-        for i in range(len(bumpiness)):
-            bumpiness[i] = abs(column_heights[i+1]-column_heights[i])
-        return (tuple(bumpiness), self.figure.x, self.figure.y, self.figure.type, self.figure.rotation)
-        #return (tuple(column_heights), tuple(column_holes), total_holes, self.figure.x, self.figure.y, self.figure.type, self.figure.rotation)
+        holes = self.get_holes()
+        bumpiness, height = self.get_bumpiness()
+        return holes, bumpiness, height
+    
+    def get_next_states(self):
+        states = {}
+        fitness = {}
+        num_rotations = len(constants.figures[self.figure.type])
+        for i in range(num_rotations):
+            valid_xs = self.width - self.figure.get_length() + 1
+            for x in range(valid_xs):
+                if x + self.figure.get_end() > self.width:
+                    break
+                simulated_game = copy.deepcopy(self)
+                simulated_game.respawn = False
+                simulated_game.figure.rotation = i
+                for _ in range(5):
+                    simulated_game.go_left()
+                simulated_game.go_side(x)
+                simulated_game.go_space()
+                cleared_lines = simulated_game.clearedlines - self.clearedlines
+                holes, bumpiness, height = simulated_game.get_state()
+                state = tuple([height, cleared_lines, holes, bumpiness])
+                fitness[(x, i)] = self.get_fitness(state)
+                states[(x, i)] = state
+        return states, fitness
+    
+    def execute_opt_move(self, fitness):
+        (x, rotation) = max(fitness, key=fitness.get)
+        print(x, rotation)
+        for _ in range(rotation):
+            self.rotate()
+        
+        movement = x - self.figure.x - self.figure.get_start()
+        if movement > 0:
+            for _ in range(movement):
+                self.go_right()
+        else:
+            for _ in range(-movement):
+                self.go_left()
+
+    def get_fitness(self, state):
+        return -0.510066*state[0] + 0.760666*state[1] - 0.35663*state[2] - 0.184483*state[3]
+                
+                
 
 
-    def get_field(self):
-        column_heights = [0,0,0,0,0,0,0,0,0,0]
-        bumpiness = [0,0,0,0,0,0,0,0,0]
-        column_holes = [0,0,0,0,0,0,0,0,0,0]
-        for j in range(self.width):
-            for i in range(self.height):
-                if column_heights[j] == 0 and self.field[i][j] == len(constants.colors):
-                    column_heights[j] = self.height - i
-                elif column_heights[j] != 0 and self.field[i][j] == 0:
-                    column_holes[j] += 1
-        total_holes = sum(column_holes)
-        for i in range(len(bumpiness)):
-            bumpiness[i] = abs(column_heights[i+1]-column_heights[i])
-        return tuple(bumpiness), total_holes
 
-    def calculate_reward(self):
-        return
+
+
+        
