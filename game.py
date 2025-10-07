@@ -206,7 +206,7 @@ class Tetris:
         self.go_side(x)
 
     def get_fitness(self, state):
-        return -0.510066*state[0] + 0.760666*state[1] - 0.35663*state[2] - 0.184483*state[3]
+        return constants.HEIGHT_WEIGHT*state[0] + constants.LINES_WEIGHT*state[1] + constants.HOLES_WEIGHT*state[2] + constants.BUMPINESS_WEIGHT*state[3]
                 
                 
 

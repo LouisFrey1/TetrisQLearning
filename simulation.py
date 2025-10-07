@@ -19,7 +19,8 @@ def run_game():
         counter += 1
         if counter > 100000:
             counter = 0
-        if counter % (constants.FPS // 4) == 0 or pressing_down:
+        #if counter % (constants.FPS // 4) == 0 or pressing_down:
+        if counter % 1 == 0 or pressing_down:
             tetris.go_space()
         
         for event in pygame.event.get():
@@ -106,6 +107,8 @@ def simulate(sim_length):
         score = run_game()
         scores.append(score)
         game_labels.append("Game " + str(game_nr+1))
-        print("Game " + str(game_nr+1) + ": " + str(score))
+    print("Average score: " + str(sum(scores)/len(scores)))
+    print("Max score: " + str(max(scores)))
+    print("Min score: " + str(min(scores)))
     pygame.quit()
-simulate(1)
+simulate(100)
