@@ -29,9 +29,9 @@ class Tetris:
             self.field.append(new_line)
 
     def new_figure(self):
+        self.figure = self.next_figure
+        self.next_figure = figure.Figure(3, 0)
         if self.respawn:
-            self.figure = self.next_figure
-            self.next_figure = figure.Figure(3, 0)
             fitness = self.get_next_states_fitness()
             self.execute_opt_move(fitness)
 
@@ -176,11 +176,10 @@ class Tetris:
         return holes, bumpiness, height
     
     def get_next_states_fitness(self):
-        states = {}
         fitness = {}
         num_rotations = len(constants.figures[self.figure.type])
         for i in range(num_rotations):
-            valid_xs = self.width - self.figure.get_length() + 1
+            valid_xs = self.width - self.figure.get_length(i) + 1
             for x in range(valid_xs):
                 if x + self.figure.get_end() > self.width:
                     break
@@ -191,11 +190,35 @@ class Tetris:
                     simulated_game.go_left()
                 simulated_game.go_side(x)
                 simulated_game.go_space()
+                #cleared_lines = simulated_game.clearedlines - self.clearedlines
+                #holes, bumpiness, height = simulated_game.get_state()
+                #state = tuple([height, cleared_lines, holes, bumpiness])
+                #fitness[(x, i)] = self.get_fitness(state)
+                fitness[(x, i)] = simulated_game.get_lookahead_states_fitness()
+        return fitness
+    
+    def get_lookahead_states_fitness(self):
+        states = {}
+        fitness = {}
+        num_rotations = len(constants.figures[self.figure.type])
+        for i in range(num_rotations):
+            valid_xs = self.width - self.figure.get_length(i) + 1
+            for x in range(valid_xs):
+                if x + self.figure.get_end() > self.width:
+                    break
+                simulated_game = copy.deepcopy(self)
+                simulated_game.respawn = False
+                simulated_game.figure = copy.deepcopy(self.figure)
+                simulated_game.figure.rotation = i
+                for _ in range(5):
+                    simulated_game.go_left()
+                simulated_game.go_side(x)
+                simulated_game.go_space()
                 cleared_lines = simulated_game.clearedlines - self.clearedlines
                 holes, bumpiness, height = simulated_game.get_state()
                 state = tuple([height, cleared_lines, holes, bumpiness])
                 fitness[(x, i)] = self.get_fitness(state)
-        return fitness
+        return max(fitness.values())
     
     def execute_opt_move(self, fitness):
         (x, rotation) = max(fitness, key=fitness.get)

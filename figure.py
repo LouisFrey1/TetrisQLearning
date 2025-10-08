@@ -37,8 +37,8 @@ class Figure:
         temp = temp % 4
         return np.max(temp)
 
-    def get_length(self):
-        temp = np.array(self.image())
+    def get_length(self, rotation):
+        temp = np.array(constants.figures[self.type][rotation])
         temp = temp % 4
         length = np.max(temp) - np.min(temp) + 1
         return length

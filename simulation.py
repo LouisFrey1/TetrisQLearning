@@ -19,14 +19,14 @@ def run_game():
         counter += 1
         if counter > 100000:
             counter = 0
-        #if counter % (constants.FPS // 4) == 0 or pressing_down:
-        if counter % 1 == 0 or pressing_down:
-            tetris.go_space()
+        #if counter % (constants.FPS *2) == 0 or pressing_down:
+        tetris.go_space()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
             if event.type == pygame.KEYDOWN:
+                
                 if event.key == pygame.K_DOWN:
                     pressing_down = True
                 if event.key == pygame.K_UP:
@@ -37,17 +37,17 @@ def run_game():
                     tetris.go_right()
                 if event.key == pygame.K_SPACE:
                     tetris.go_space()
+                
                 if event.key == pygame.K_ESCAPE:
                     tetris.__init__(20, 10)
                 if event.key == pygame.K_p:
                     tetris.pause()
-
             if event.type == pygame.KEYUP:
                     if event.key == pygame.K_DOWN:
                         pressing_down = False
  
         screen.fill(constants.WHITE)
-
+        
         # Draws field
         for i in range(tetris.height):
             for j in range(tetris.width):
@@ -81,7 +81,8 @@ def run_game():
                                         [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_figure.x) + 1,
                                         tetris.y + tetris.zoom * (i + tetris.next_figure.y) + 1,
                                         tetris.zoom - 2, tetris.zoom - 2], 1)
-
+          
+        # Draws text
         font = pygame.font.SysFont('Calibri', 25, True, False)
         linestext = font.render("Lines cleared: " + str(tetris.clearedlines), True, constants.BLACK)
         font1 = pygame.font.SysFont('Calibri', 65, True, False)
@@ -98,7 +99,6 @@ def run_game():
     return tetris.clearedlines
 
 def simulate(sim_length):
-    game_labels = []
     scores = []
     # Initialize the game engine
     pygame.init()
@@ -106,9 +106,9 @@ def simulate(sim_length):
     for game_nr in range(sim_length):
         score = run_game()
         scores.append(score)
-        game_labels.append("Game " + str(game_nr+1))
+        print("Game " + str(game_nr+1) + " Score: " + str(score))
     print("Average score: " + str(sum(scores)/len(scores)))
     print("Max score: " + str(max(scores)))
     print("Min score: " + str(min(scores)))
     pygame.quit()
-simulate(100)
+simulate(10)

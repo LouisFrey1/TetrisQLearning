@@ -4,7 +4,7 @@ WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 
 SIZE = (400, 500)
-FPS = 60
+FPS = 30
 
 ALPHA = 1
 GAMMA = 1
