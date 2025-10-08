@@ -16,12 +16,6 @@ class Tetris:
         self.field = []
         self.clearedlines = 0
         self.state = "start"
-        self.commands = {
-            "up": self.rotate,
-            "left": self.go_left,
-            "right": self.go_right,
-            "space": self.go_space
-        }
         for _ in range(height):
             new_line = []
             for _ in range(width):
@@ -109,30 +103,13 @@ class Tetris:
             if self.intersects():
                 self.tetromino.x = old_x
 
-    def go_left(self):
-        self.go_side(-1)
-
-    def go_right(self):
-        self.go_side(1)
-
     def rotate(self):
         if self.state == "start":
             old_rotation = self.tetromino.rotation
             self.tetromino.rotate()
             # Try to move tile left and right once to enable rotating at the edge
             if self.intersects():
-                self.go_up()
-                if self.intersects():
-                    self.go_side(-1)
-                    if self.intersects():
-                        self.go_side(1)
-                        if self.intersects() and self.tetromino.type != 0:
-                            self.tetromino.rotation = old_rotation
-                    # I-Block needs to be moved left twice when rotated at the right edge
-                    if self.intersects() and self.tetromino.type == 0:
-                        self.go_side(-2)
-                        if self.intersects():
-                            self.tetromino.rotation = old_rotation
+                self.tetromino.rotation = old_rotation
         
     # Adds current block to field
     def get_field(self):
@@ -185,7 +162,7 @@ class Tetris:
                 simulated_game.respawn = False
                 simulated_game.tetromino.rotation = i
                 for _ in range(5):
-                    simulated_game.go_left()
+                    simulated_game.go_side(-1)
                 simulated_game.go_side(x)
                 simulated_game.go_space()
                 if simulated_game.state == "gameover":
@@ -207,7 +184,7 @@ class Tetris:
                 simulated_game.tetromino = copy.deepcopy(self.tetromino)
                 simulated_game.tetromino.rotation = i
                 for _ in range(5):
-                    simulated_game.go_left()
+                    simulated_game.go_side(-1)
                 simulated_game.go_side(x)
                 simulated_game.go_space()
                 if simulated_game.state == "gameover":
@@ -224,7 +201,7 @@ class Tetris:
         for _ in range(rotation):
             self.rotate()
         for _ in range(5):
-            self.go_left()
+            self.go_side(-1)
         self.go_side(x)
 
     def get_fitness(self, state):

@@ -7,44 +7,25 @@ def run_game():
     screen = pygame.display.set_mode(constants.SIZE)
     clock = pygame.time.Clock()
     tetris = game.Tetris(20, 10)
-
-    # Loop until the user clicks the close button.
-    done = False
-    pressing_down = False
     counter = 0
 
-    while tetris.state != "gameover" and not done:
+    while tetris.state != "gameover":
         if tetris.tetromino is None:
             tetris.new_tetromino()
         counter += 1
         if counter > 100000:
             counter = 0
-        if counter % 2 == 0 or pressing_down:
+        if counter % 2 == 0:
             tetris.go_space()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                done = True
+                pygame.quit()
             if event.type == pygame.KEYDOWN:
-                
-                if event.key == pygame.K_DOWN:
-                    pressing_down = True
-                if event.key == pygame.K_UP:
-                    tetris.rotate()
-                if event.key == pygame.K_LEFT:
-                    tetris.go_left()
-                if event.key == pygame.K_RIGHT:
-                    tetris.go_right()
-                if event.key == pygame.K_SPACE:
-                    tetris.go_space()
-                
                 if event.key == pygame.K_ESCAPE:
-                    tetris.__init__(20, 10)
+                    pygame.quit()
                 if event.key == pygame.K_p:
                     tetris.pause()
-            if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_DOWN:
-                        pressing_down = False
  
         screen.fill(constants.WHITE)
         
