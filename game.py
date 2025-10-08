@@ -1,4 +1,4 @@
-import figure
+import tetromino
 import constants
 import numpy as np
 import copy
@@ -8,8 +8,8 @@ class Tetris:
         self.x = 100
         self.y = 60
         self.zoom = 20
-        self.figure = None
-        self.next_figure = figure.Figure(3, 0)
+        self.tetromino = None
+        self.next_tetromino = tetromino.Tetromino(3, 0)
         self.respawn = True
         self.height = height
         self.width = width
@@ -28,10 +28,12 @@ class Tetris:
                 new_line.append(0)
             self.field.append(new_line)
 
-    def new_figure(self):
+    def new_tetromino(self):
+        self.tetromino = self.next_tetromino
+        self.next_tetromino = tetromino.Tetromino(3, 0)
+        if self.intersects():
+            self.state = "gameover"
         if self.respawn:
-            self.figure = self.next_figure
-            self.next_figure = figure.Figure(3, 0)
             fitness = self.get_next_states_fitness()
             self.execute_opt_move(fitness)
 
@@ -44,13 +46,13 @@ class Tetris:
 
     def intersects(self):
         intersection = False
-        for square in self.figure.image():
+        for square in self.tetromino.image():
             i = square // 4
             j = square % 4
-            if i + self.figure.y > self.height - 1 or \
-                    j + self.figure.x > self.width - 1 or \
-                    j + self.figure.x < 0 or \
-                    self.field[i + self.figure.y][j + self.figure.x] > 0:
+            if i + self.tetromino.y > self.height - 1 or \
+                    j + self.tetromino.x > self.width - 1 or \
+                    j + self.tetromino.x < 0 or \
+                    self.field[i + self.tetromino.y][j + self.tetromino.x] > 0:
                 intersection = True
         return intersection
 
@@ -67,6 +69,7 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
+                self.field[0] = [0 for _ in range(self.width)]
             elif zeros < self.width and perfect:
                 perfect = False
         if lines > 0:
@@ -76,40 +79,38 @@ class Tetris:
     def go_space(self):
         if self.state == "start":
             while not self.intersects():
-                self.figure.y += 1
-            self.figure.y -= 1
+                self.tetromino.y += 1
+            self.tetromino.y -= 1
             self.freeze()
 
     def go_down(self):
         if self.state == "start":
-            self.figure.y += 1
+            self.tetromino.y += 1
             if self.intersects():
-                self.figure.y -= 1
+                self.tetromino.y -= 1
                 self.freeze()
 
     def go_up(self):
         if self.state == "start":
-            old_y = self.figure.y
-            self.figure.y -= 1
+            old_y = self.tetromino.y
+            self.tetromino.y -= 1
             if self.intersects():
-                self.figure.y = old_y
+                self.tetromino.y = old_y
 
     def freeze(self):
         for i in range(4):
             for j in range(4):
-                if i * 4 + j in self.figure.image():
-                    self.field[i + self.figure.y][j + self.figure.x] = len(constants.colors)
+                if i * 4 + j in self.tetromino.image():
+                    self.field[i + self.tetromino.y][j + self.tetromino.x] = len(constants.colors)
         self.break_lines()
-        self.new_figure()
-        if self.intersects():
-            self.state = "gameover"
+        self.new_tetromino()
 
     def go_side(self, dx):
         if self.state == "start":
-            old_x = self.figure.x
-            self.figure.x += dx
+            old_x = self.tetromino.x
+            self.tetromino.x += dx
             if self.intersects():
-                self.figure.x = old_x
+                self.tetromino.x = old_x
 
     def go_left(self):
         self.go_side(-1)
@@ -119,8 +120,8 @@ class Tetris:
 
     def rotate(self):
         if self.state == "start":
-            old_rotation = self.figure.rotation
-            self.figure.rotate()
+            old_rotation = self.tetromino.rotation
+            self.tetromino.rotate()
             # Try to move tile left and right once to enable rotating at the edge
             if self.intersects():
                 self.go_up()
@@ -128,20 +129,20 @@ class Tetris:
                     self.go_side(-1)
                     if self.intersects():
                         self.go_side(1)
-                        if self.intersects() and self.figure.type != 0:
-                            self.figure.rotation = old_rotation
+                        if self.intersects() and self.tetromino.type != 0:
+                            self.tetromino.rotation = old_rotation
                     # I-Block needs to be moved left twice when rotated at the right edge
-                    if self.intersects() and self.figure.type == 0:
+                    if self.intersects() and self.tetromino.type == 0:
                         self.go_side(-2)
                         if self.intersects():
-                            self.figure.rotation = old_rotation
+                            self.tetromino.rotation = old_rotation
         
     # Adds current block to field
     def get_field(self):
         total_field = np.array(self.field)
-        x = self.figure.x
-        y = self.figure.y
-        for i in self.figure.image():
+        x = self.tetromino.x
+        y = self.tetromino.y
+        for i in self.tetromino.image():
             total_field[y+i//4][x+i%4] = 1
         return total_field
         
@@ -176,25 +177,27 @@ class Tetris:
         return holes, bumpiness, height
     
     def get_next_states_fitness(self):
-        states = {}
         fitness = {}
-        num_rotations = len(constants.figures[self.figure.type])
+        num_rotations = len(constants.tetrominos[self.tetromino.type])
         for i in range(num_rotations):
-            valid_xs = self.width - self.figure.get_length() + 1
+            valid_xs = self.width - self.tetromino.get_length(i) + 1
             for x in range(valid_xs):
-                if x + self.figure.get_end() > self.width:
+                if x + self.tetromino.get_end() > self.width:
                     break
                 simulated_game = copy.deepcopy(self)
                 simulated_game.respawn = False
-                simulated_game.figure.rotation = i
+                simulated_game.tetromino.rotation = i
                 for _ in range(5):
                     simulated_game.go_left()
                 simulated_game.go_side(x)
                 simulated_game.go_space()
-                cleared_lines = simulated_game.clearedlines - self.clearedlines
-                holes, bumpiness, height = simulated_game.get_state()
-                state = tuple([height, cleared_lines, holes, bumpiness])
-                fitness[(x, i)] = self.get_fitness(state)
+                if simulated_game.state == "gameover":
+                    fitness[(x, i)] = -float('inf')
+                else:
+                    cleared_lines = simulated_game.clearedlines - self.clearedlines
+                    holes, bumpiness, height = simulated_game.get_state()
+                    state = tuple([height, cleared_lines, holes, bumpiness])
+                    fitness[(x, i)] = self.get_fitness(state)
         return fitness
     
     def execute_opt_move(self, fitness):
