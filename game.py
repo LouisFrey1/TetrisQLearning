@@ -31,6 +31,8 @@ class Tetris:
     def new_tetromino(self):
         self.tetromino = self.next_tetromino
         self.next_tetromino = tetromino.Tetromino(3, 0)
+        if self.intersects():
+            self.state = "gameover"
         if self.respawn:
             fitness = self.get_next_states_fitness()
             self.execute_opt_move(fitness)
@@ -56,7 +58,6 @@ class Tetris:
 
     def break_lines(self):
         lines = 0
-        perfect = True
         for i in range(1, self.height):
             zeros = 0
             for j in range(self.width):
@@ -67,8 +68,7 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
-            elif zeros < self.width and perfect:
-                perfect = False
+                self.field[0] = [0 for _ in range(self.width)]
         if lines > 0:
             self.clearedlines += lines
             
@@ -98,11 +98,9 @@ class Tetris:
         for i in range(4):
             for j in range(4):
                 if i * 4 + j in self.tetromino.image():
-                    self.field[i + self.tetromino.y][j + self.tetromino.x] = len(constants.colors)
+                    self.field[i + self.tetromino.y][j + self.tetromino.x] = self.tetromino.type + 1
         self.break_lines()
         self.new_tetromino()
-        if self.intersects():
-            self.state = "gameover"
 
     def go_side(self, dx):
         if self.state == "start":
@@ -162,7 +160,7 @@ class Tetris:
         column_heights = np.zeros(self.width)
         for j in range(self.width):
             for i in range(self.height):
-                if self.field[i][j] == len(constants.colors):
+                if self.field[i][j] > 0:
                     column_heights[j] = self.height - i
                     break
         total_height = np.sum(column_heights)
@@ -190,15 +188,13 @@ class Tetris:
                     simulated_game.go_left()
                 simulated_game.go_side(x)
                 simulated_game.go_space()
-                #cleared_lines = simulated_game.clearedlines - self.clearedlines
-                #holes, bumpiness, height = simulated_game.get_state()
-                #state = tuple([height, cleared_lines, holes, bumpiness])
-                #fitness[(x, i)] = self.get_fitness(state)
-                fitness[(x, i)] = simulated_game.get_lookahead_states_fitness()
+                if simulated_game.state == "gameover":
+                    fitness[(x, i)] = -float('inf')
+                else:
+                    fitness[(x, i)] = simulated_game.get_lookahead_states_fitness()
         return fitness
     
     def get_lookahead_states_fitness(self):
-        states = {}
         fitness = {}
         num_rotations = len(constants.tetrominos[self.tetromino.type])
         for i in range(num_rotations):
@@ -214,10 +210,13 @@ class Tetris:
                     simulated_game.go_left()
                 simulated_game.go_side(x)
                 simulated_game.go_space()
-                cleared_lines = simulated_game.clearedlines - self.clearedlines
-                holes, bumpiness, height = simulated_game.get_state()
-                state = tuple([height, cleared_lines, holes, bumpiness])
-                fitness[(x, i)] = self.get_fitness(state)
+                if simulated_game.state == "gameover":
+                    fitness[(x, i)] = -float('inf')
+                else:
+                    cleared_lines = simulated_game.clearedlines - self.clearedlines
+                    holes, bumpiness, height = simulated_game.get_state()
+                    state = tuple([height, cleared_lines, holes, bumpiness])
+                    fitness[(x, i)] = self.get_fitness(state)
         return max(fitness.values())
     
     def execute_opt_move(self, fitness):
