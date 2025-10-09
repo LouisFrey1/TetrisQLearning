@@ -51,9 +51,15 @@ After running 100 games, the hardcoded model achieved an average of 337.63 lines
 
 This solution extends the hardcoded one by adding the lookahead piece into the calculation of the best move. The fitness of a placement is now not defined by its own state, but by the best possible placement of the next tetromino. This allows the model to think ahead and pull off more complicated maneuvers.
 
+![Tetris Screenshot](images/Screenshot3.png)
+
+For example, this placement of the T-Tetromino would receive a poor fitness from the previous model, since it creates a hole and does not clear any lines. When paired with the lookahead piece however, the updated model can see that the line can be cleared with the next piece, erasing the hole.
+
 This improved the score significantly, compared to the previous model. After 10 games, it achieved an average score of 9112.2 lines cleared, with a maximum score of 29752 lines cleared and a minimum of 951. However, it still does not run infinitely. However, it is unclear, which factors lead to failure. 
 
 The downside of this solution is the much lower performance. While the previous model only had to simulate p \times r possible actions, this version has to simulate p1 \times r1 \times p2 \times r2 possible actions. If p1=p2=p=8 and r1=r2=r=4, this results in 1024 simulations instead of 32.
+
+
 
 ## Sources
 
