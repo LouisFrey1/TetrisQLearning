@@ -45,6 +45,7 @@ class Tetris:
             j = square % 4
             if i + self.tetromino.y > self.height - 1 or \
                     j + self.tetromino.x > self.width - 1 or \
+                    i + self.tetromino.y < 0 or \
                     j + self.tetromino.x < 0 or \
                     self.field[i + self.tetromino.y][j + self.tetromino.x] > 0:
                 intersection = True
