@@ -190,9 +190,8 @@ class Tetris:
                 if simulated_game.state == "gameover":
                     fitness[(x, i)] = -float('inf')
                 else:
-                    cleared_lines = simulated_game.clearedlines - self.clearedlines
                     holes, bumpiness, height = simulated_game.get_state()
-                    state = tuple([height, cleared_lines, holes, bumpiness])
+                    state = tuple([height, simulated_game.cleared_lines, holes, bumpiness])
                     fitness[(x, i)] = self.get_fitness(state)
         return max(fitness.values())
     
