@@ -49,8 +49,9 @@ class Tetris:
         for square in self.tetromino.image():
             i = square // 4
             j = square % 4
-            if i + self.tetromino.y > self.height - 1 or \
-                    j + self.tetromino.x > self.width - 1 or \
+            if i + self.tetromino.y >= self.height or \
+                    j + self.tetromino.x >= self.width or \
+                    i + self.tetromino.y < 0 or \
                     j + self.tetromino.x < 0 or \
                     self.field[i + self.tetromino.y][j + self.tetromino.x] > 0:
                 intersection = True
@@ -58,8 +59,7 @@ class Tetris:
 
     def break_lines(self):
         lines = 0
-        perfect = True
-        for i in range(1, self.height):
+        for i in range(0, self.height):
             zeros = 0
             for j in range(self.width):
                 if self.field[i][j] == 0:
@@ -69,9 +69,7 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
-                self.field[0] = [0 for _ in range(self.width)]
-            elif zeros < self.width and perfect:
-                perfect = False
+                self.field[0] = [0 for _ in range(self.width)]#
         if lines > 0:
             self.clearedlines += lines
             
@@ -101,7 +99,7 @@ class Tetris:
         for i in range(4):
             for j in range(4):
                 if i * 4 + j in self.tetromino.image():
-                    self.field[i + self.tetromino.y][j + self.tetromino.x] = len(constants.colors)
+                    self.field[i + self.tetromino.y][j + self.tetromino.x] = self.tetromino.type + 1
         self.break_lines()
         self.new_tetromino()
 
@@ -124,18 +122,7 @@ class Tetris:
             self.tetromino.rotate()
             # Try to move tile left and right once to enable rotating at the edge
             if self.intersects():
-                self.go_up()
-                if self.intersects():
-                    self.go_side(-1)
-                    if self.intersects():
-                        self.go_side(1)
-                        if self.intersects() and self.tetromino.type != 0:
-                            self.tetromino.rotation = old_rotation
-                    # I-Block needs to be moved left twice when rotated at the right edge
-                    if self.intersects() and self.tetromino.type == 0:
-                        self.go_side(-2)
-                        if self.intersects():
-                            self.tetromino.rotation = old_rotation
+                self.tetromino.rotation = old_rotation
         
     # Adds current block to field
     def get_field(self):
@@ -163,7 +150,7 @@ class Tetris:
         column_heights = np.zeros(self.width)
         for j in range(self.width):
             for i in range(self.height):
-                if self.field[i][j] == len(constants.colors):
+                if self.field[i][j] > 0:
                     column_heights[j] = self.height - i
                     break
         total_height = np.sum(column_heights)
@@ -194,9 +181,8 @@ class Tetris:
                 if simulated_game.state == "gameover":
                     fitness[(x, i)] = -float('inf')
                 else:
-                    cleared_lines = simulated_game.clearedlines - self.clearedlines
                     holes, bumpiness, height = simulated_game.get_state()
-                    state = tuple([height, cleared_lines, holes, bumpiness])
+                    state = tuple([height, simulated_game.clearedlines, holes, bumpiness])
                     fitness[(x, i)] = self.get_fitness(state)
         return fitness
     

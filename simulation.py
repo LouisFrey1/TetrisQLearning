@@ -10,7 +10,6 @@ def run_game():
 
     # Loop until the user clicks the close button.
     done = False
-    pressing_down = False
     counter = 0
 
     while tetris.state != "gameover" and not done:
@@ -19,31 +18,16 @@ def run_game():
         counter += 1
         if counter > 100000:
             counter = 0
-        #if counter % (constants.FPS // 4) == 0 or pressing_down:
         tetris.go_space()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                done = True
+                pygame.quit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_DOWN:
-                    pressing_down = True
-                if event.key == pygame.K_UP:
-                    tetris.rotate()
-                if event.key == pygame.K_LEFT:
-                    tetris.go_left()
-                if event.key == pygame.K_RIGHT:
-                    tetris.go_right()
-                if event.key == pygame.K_SPACE:
-                    tetris.go_space()
                 if event.key == pygame.K_ESCAPE:
-                    tetris.__init__(20, 10)
+                    pygame.quit()
                 if event.key == pygame.K_p:
                     tetris.pause()
-
-            if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_DOWN:
-                        pressing_down = False
  
         screen.fill(constants.WHITE)
 
@@ -52,16 +36,16 @@ def run_game():
             for j in range(tetris.width):
                 pygame.draw.rect(screen, constants.GRAY, [tetris.x + tetris.zoom * j, tetris.y + tetris.zoom * i, tetris.zoom, tetris.zoom], 1)
                 if tetris.field[i][j] > 0:
-                    pygame.draw.rect(screen, constants.GRAY,
+                    pygame.draw.rect(screen, constants.colors[tetris.field[i][j]-1],
                                     [tetris.x + tetris.zoom * j + 1, tetris.y + tetris.zoom * i + 1, tetris.zoom - 2, tetris.zoom - 1])
-
+        
         # Draws current block
         if tetris.tetromino is not None:
             for i in range(4):
                 for j in range(4):
                     p = i * 4 + j
                     if p in tetris.tetromino.image():
-                        pygame.draw.rect(screen, constants.colors[tetris.tetromino.color],
+                        pygame.draw.rect(screen, constants.colors[tetris.tetromino.type],
                                         [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
                                         tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                         tetris.zoom - 2, tetris.zoom - 2])
@@ -72,7 +56,7 @@ def run_game():
                 for j in range(4):
                     p = i * 4 + j
                     if p in tetris.next_tetromino.image():
-                        pygame.draw.rect(screen, constants.colors[tetris.next_tetromino.color],
+                        pygame.draw.rect(screen, constants.colors[tetris.next_tetromino.type],
                                         [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
                                         tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
                                         tetris.zoom - 2, tetris.zoom - 2])

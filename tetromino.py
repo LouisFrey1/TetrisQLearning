@@ -12,7 +12,6 @@ class Tetromino:
         self.x = x
         self.y = y
         self.type = random.randint(0, len(constants.tetrominos) - 1)
-        self.color = self.type
         self.rotation = 0
         self.droppedlines = 0
         self.freezetimer = None
