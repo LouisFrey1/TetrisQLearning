@@ -1,6 +1,8 @@
 
 import argparse
 import torch
+import pygame
+import constants
 from game import Tetris
 from DeepQNetwork import DeepQNetwork
 
@@ -19,7 +21,7 @@ def get_args():
     return args
 
 
-def test(opt):
+def test(opt, displayBoard=True):
     torch.serialization.add_safe_globals([torch.nn.modules.container.Sequential])
     torch.serialization.safe_globals([DeepQNetwork])
     if torch.cuda.is_available():
@@ -27,15 +29,18 @@ def test(opt):
     else:
         torch.manual_seed(123)
     if torch.cuda.is_available():
-        model = torch.load("{}/tetris_final.pt".format(opt.saved_path))
+        model = torch.load("{}/tetris_final".format(opt.saved_path))
     else:
-        model = torch.load("{}/tetris_final.pt".format(opt.saved_path), weights_only=False, map_location=lambda storage, loc: storage)
+        model = torch.load("{}/tetris_final".format(opt.saved_path), weights_only=False, map_location=lambda storage, loc: storage)
     model.eval()
     env = Tetris(width=opt.width, height=opt.height)
     if torch.cuda.is_available():
         model.cuda()
     while True:
         env.new_tetromino()
+        if displayBoard:
+            display(env)
+
         next_steps = env.get_next_states()
         next_actions, next_states = zip(*next_steps.items())
         next_states = torch.stack(next_states)
@@ -48,9 +53,35 @@ def test(opt):
 
         if done:
             break
+    return env.clearedlines
         
+def display(tetris):
+    pygame.display.set_caption("Tetris")
+    screen = pygame.display.set_mode(constants.SIZE)
+    screen.fill(constants.WHITE)
+    for i in range(tetris.height):
+        for j in range(tetris.width):
+            pygame.draw.rect(screen, constants.GRAY, [tetris.x + tetris.zoom * j, tetris.y + tetris.zoom * i, tetris.zoom, tetris.zoom], 1)
+            if tetris.field[i][j] > 0:
+                pygame.draw.rect(screen, constants.colors[tetris.field[i][j]-1],
+                                [tetris.x + tetris.zoom * j + 1, tetris.y + tetris.zoom * i + 1, tetris.zoom - 2, tetris.zoom - 1])
 
-
+    # Draws current block
+    if tetris.tetromino is not None:
+        for i in range(4):
+            for j in range(4):
+                p = i * 4 + j
+                if p in tetris.tetromino.image():
+                    pygame.draw.rect(screen, constants.colors[tetris.tetromino.type],
+                                    [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
+                                    tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
+                                    tetris.zoom - 2, tetris.zoom - 2])
+    pygame.display.flip()
+    pygame.time.wait(50)    
+    
 if __name__ == "__main__":
     opt = get_args()
-    test(opt)
+    sim_length = 100
+    for i in range(sim_length):
+        score = test(opt, displayBoard=False)
+        print("Simulation: {}/{}: Score {}".format(i+1, sim_length, score))  

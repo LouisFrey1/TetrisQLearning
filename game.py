@@ -8,7 +8,6 @@ class Tetris:
     def __init__(self, height, width):
         self.x = 100
         self.y = 60
-        self.score = 0
         self.zoom = 20
         self.tetromino = None
         self.next_tetromino = tetromino.Tetromino(3, 0)
@@ -62,7 +61,8 @@ class Tetris:
                 for i1 in range(i, 1, -1):
                     for j in range(self.width):
                         self.field[i1][j] = self.field[i1 - 1][j]
-                self.field[0] = [0 for _ in range(self.width)]
+                for j in range(self.width):
+                    self.field[0][j] = 0
         if lines > 0:
             self.clearedlines += lines
             
@@ -178,13 +178,9 @@ class Tetris:
         self.go_side(x)
         self.go_space()
         lines_cleared = self.clearedlines - lines_cleared_old
-        score = 1 + (lines_cleared ** 2) * self.width
-        self.score += score
         if not self.state == "gameover":
             self.new_tetromino()
-        if self.state == "gameover":
-            self.score -= 2
-        return score, self.state == "gameover"
+        return lines_cleared, self.state == "gameover"
     
 
 

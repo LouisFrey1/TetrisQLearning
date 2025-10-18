@@ -6,7 +6,8 @@ from random import random, randint, sample
 import numpy as np
 import torch
 import torch.nn as nn
-from tensorboardX import SummaryWriter
+#from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from DeepQNetwork import DeepQNetwork
 from game import Tetris
@@ -38,15 +39,12 @@ def get_args():
     return args
 
 
-def train(opt, display=False):
+def train(opt, displayBoard=False):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(123)
     else:
         torch.manual_seed(123)
-    if os.path.isdir(opt.log_path):
-        shutil.rmtree(opt.log_path)
-    os.makedirs(opt.log_path)
-    writer = SummaryWriter(opt.log_path)
+    writer = SummaryWriter()
     env = Tetris(height=opt.height, width=opt.width)
     model = DeepQNetwork()
     optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr)
@@ -61,7 +59,7 @@ def train(opt, display=False):
     while epoch < opt.num_epochs:
         env.new_tetromino()
         # Draws field
-        if display:
+        if displayBoard:
             display(env)
         next_steps = env.get_next_states()
         # Exploration or exploitation
@@ -91,7 +89,6 @@ def train(opt, display=False):
             next_state = next_state.cuda()
         replay_memory.append([state, reward, next_state, done])
         if done:
-            final_score = env.score
             final_cleared_lines = env.clearedlines
             env = Tetris(opt.height, opt.width)
             state = torch.FloatTensor([0, 0, 0, 0])
@@ -129,12 +126,10 @@ def train(opt, display=False):
         loss.backward()
         optimizer.step()
 
-        print("Epoch: {}/{}, Score: {}, Cleared lines: {}".format(
+        print("Epoch: {}/{}, Cleared lines: {}".format(
             epoch,
             opt.num_epochs,
-            final_score,
             final_cleared_lines))
-        writer.add_scalar('Train/Score', final_score, epoch - 1)
         writer.add_scalar('Train/Cleared lines', final_cleared_lines, epoch - 1)
 
         #if epoch > 0 and epoch % opt.save_interval == 0:
@@ -166,7 +161,7 @@ def display(tetris):
                                     [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2])
-                    
+    '''               
     # Draws next block
     if tetris.next_tetromino is not None:
         for i in range(4):
@@ -181,9 +176,10 @@ def display(tetris):
                                     [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2], 1)
+    '''
     pygame.display.flip()
     pygame.time.wait(10)
 
 if __name__ == "__main__":
     opt = get_args()
-    train(opt, display=True)
+    train(opt, displayBoard=False)
