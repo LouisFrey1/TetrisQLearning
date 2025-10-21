@@ -16,12 +16,6 @@ class Tetris:
         self.field = []
         self.clearedlines = 0
         self.state = "start"
-        self.commands = {
-            "up": self.rotate,
-            "left": self.go_left,
-            "right": self.go_right,
-            "space": self.go_space
-        }
         for _ in range(height):
             new_line = []
             for _ in range(width):
