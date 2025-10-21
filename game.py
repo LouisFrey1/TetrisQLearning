@@ -52,7 +52,8 @@ class Tetris:
         return intersection
 
     def break_lines(self):
-        for i in range(self.height - 1, -1, -1):
+        i = self.height - 1
+        while i >= 0:
             full = True
             for j in range(self.width):
                 if self.field[i][j] == 0:
@@ -63,6 +64,8 @@ class Tetris:
                 del self.field[i]
                 self.field.insert(0, [0] * self.width)
                 self.clearedlines += 1
+            else:
+                i -= 1
             
 
     def go_space(self):
