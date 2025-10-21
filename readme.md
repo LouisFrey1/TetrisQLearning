@@ -45,7 +45,11 @@ Due to its simplicity, this model only considers dropping the tetrominos from th
 
 This model produces decent results, but does not run infinitely. When the blocks are stacked very high, this solution often prioritizes a low bumpiness instead of reducing the height, usually waiting for a I-Tetromino, while ignoring the threat of game over. When the is no way to immediately clear a line, this model doesn't prepare to clear it in the near future; instead it focuses on not creating holes. Furthermore, it seems too comfortable letting the blocks stack up over the halfway point, allowing holes to form in the process and allowing for a quicker defeat.
 
-After running 100 games, the hardcoded model achieved an average of 337.63 lines cleared, with the worst score being 55 lines cleared and the best score being 1649 lines cleared. As these results show, there is a lot of room for improvement.
+Average score: 391.01
+Max score: 1674
+Min score: 33
+
+After running 100 games, the hardcoded model achieved an average of 391.01 lines cleared, with the worst score being 55 lines cleared and the best score being 1674 lines cleared. As these results show, there is a lot of room for improvement.
 
 ## Hardcoded With Lookahead
 
