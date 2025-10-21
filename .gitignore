@@ -1,5 +1,3 @@
 venv/
 TetrisQLearning/__pycache__/
 __pycache__/
-trained_models/
-runs/
