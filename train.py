@@ -49,7 +49,7 @@ def train(opt, displayBoard=False):
     model = DeepQNetwork()
     optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr)
     criterion = nn.MSELoss()
-    state = torch.FloatTensor([0, 0, 0, 0])
+    state = env.reset()
     if torch.cuda.is_available():
         model.cuda()
         state = state.cuda()
@@ -88,10 +88,9 @@ def train(opt, displayBoard=False):
         if torch.cuda.is_available():
             next_state = next_state.cuda()
         replay_memory.append([state, reward, next_state, done])
-        if done:
+        if done or env.clearedlines >= 5000:
             final_cleared_lines = env.clearedlines
-            env = Tetris(opt.height, opt.width)
-            state = torch.FloatTensor([0, 0, 0, 0])
+            state = env.reset()
             if torch.cuda.is_available():
                 state = state.cuda()
         else:
@@ -132,8 +131,8 @@ def train(opt, displayBoard=False):
             final_cleared_lines))
         writer.add_scalar('Train/Cleared lines', final_cleared_lines, epoch - 1)
 
-        #if epoch > 0 and epoch % opt.save_interval == 0:
-        #    torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
+        if epoch > 0 and epoch % opt.save_interval == 0:
+            torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
 
     if not os.path.exists(opt.saved_path):
         os.makedirs(opt.saved_path)
@@ -182,4 +181,4 @@ def display(tetris):
 
 if __name__ == "__main__":
     opt = get_args()
-    train(opt, displayBoard=False)
+    train(opt, displayBoard=True)

@@ -11,29 +11,41 @@ class Tetris:
         self.zoom = 20
         self.tetromino = None
         self.next_tetromino = tetromino.Tetromino(3, 0)
-        self.respawn = True
         self.height = height
         self.width = width
         self.field = []
         self.clearedlines = 0
-        self.state = "start"
+        self.gamestate = "start"
         for _ in range(height):
             new_line = []
             for _ in range(width):
                 new_line.append(0)
             self.field.append(new_line)
 
+    def reset(self):
+        self.tetromino = None
+        self.next_tetromino = tetromino.Tetromino(3, 0)
+        self.field = []
+        self.clearedlines = 0
+        self.gamestate = "start"
+        for _ in range(self.height):
+            new_line = []
+            for _ in range(self.width):
+                new_line.append(0)
+            self.field.append(new_line)
+        return torch.FloatTensor([0, 0, 0, 0]) 
+
     def new_tetromino(self):
         self.tetromino = self.next_tetromino
         self.next_tetromino = tetromino.Tetromino(3, 0)
         if self.intersects():
-            self.state = "gameover"
+            self.gamestate = "gameover"
 
     def pause(self):
-        if self.state == "start":
-            self.state = "pause"
-        elif self.state == "pause":
-            self.state = "start"
+        if self.gamestate == "start":
+            self.gamestate = "pause"
+        elif self.gamestate == "pause":
+            self.gamestate = "start"
         
 
     def intersects(self):
@@ -50,39 +62,35 @@ class Tetris:
         return intersection
 
     def break_lines(self):
-        lines = 0
-        for i in range(1, self.height):
-            zeros = 0
+        for i in range(self.height - 1, -1, -1):
+            full = True
             for j in range(self.width):
                 if self.field[i][j] == 0:
-                    zeros += 1
-            if zeros == 0:
-                lines += 1
-                for i1 in range(i, 1, -1):
-                    for j in range(self.width):
-                        self.field[i1][j] = self.field[i1 - 1][j]
-                for j in range(self.width):
-                    self.field[0][j] = 0
-        if lines > 0:
-            self.clearedlines += lines
+                    full = False
+                    break
+            if full:
+                # remove the full row and insert an empty one at the top
+                del self.field[i]
+                self.field.insert(0, [0] * self.width)
+                self.clearedlines += 1
             
 
     def go_space(self):
-        if self.state == "start":
+        if self.gamestate == "start":
             while not self.intersects():
                 self.tetromino.y += 1
             self.tetromino.y -= 1
             self.freeze()
 
     def go_down(self):
-        if self.state == "start":
+        if self.gamestate == "start":
             self.tetromino.y += 1
             if self.intersects():
                 self.tetromino.y -= 1
                 self.freeze()
 
     def go_up(self):
-        if self.state == "start":
+        if self.gamestate == "start":
             old_y = self.tetromino.y
             self.tetromino.y -= 1
             if self.intersects():
@@ -97,14 +105,14 @@ class Tetris:
         self.new_tetromino()
 
     def go_side(self, dx):
-        if self.state == "start":
+        if self.gamestate == "start":
             old_x = self.tetromino.x
             self.tetromino.x += dx
             if self.intersects():
                 self.tetromino.x = old_x
 
     def rotate(self):
-        if self.state == "start":
+        if self.gamestate == "start":
             old_rotation = self.tetromino.rotation
             self.tetromino.rotate()
             # Try to move tile left and right once to enable rotating at the edge
@@ -159,7 +167,6 @@ class Tetris:
                 if x + self.tetromino.get_end() > self.width:
                     break
                 simulated_game = copy.deepcopy(self)
-                simulated_game.respawn = False
                 simulated_game.tetromino.rotation = i
                 for _ in range(5):
                     simulated_game.go_side(-1)
@@ -168,7 +175,30 @@ class Tetris:
                 states[(x, i)] = simulated_game.get_state()
         return states
     
+    def get_next_states_lookahead(self):
+        states = {}
+        num_rotations = len(constants.tetrominos[self.tetromino.type])
+        max_lines = -1
+        max_lines_action = (0,0)
+        for i in range(num_rotations):
+            valid_xs = self.width - self.tetromino.get_length(i) + 1
+            for x in range(valid_xs):
+                if x + self.tetromino.get_end() > self.width:
+                    break
+                simulated_game = copy.deepcopy(self)
+                simulated_game.tetromino.rotation = i
+                for _ in range(5):
+                    simulated_game.go_side(-1)
+                simulated_game.go_side(x)
+                simulated_game.go_space()
+                states[(x, i)] = simulated_game.get_state()
+                if simulated_game.clearedlines > max_lines:
+                    max_lines = simulated_game.clearedlines
+                    max_lines_action = (x, i)
+        return states[max_lines_action]
+    
     def step(self, action):
+        reward = 0
         lines_cleared_old = self.clearedlines
         (x, rotation) = action
         for _ in range(rotation):
@@ -178,9 +208,9 @@ class Tetris:
         self.go_side(x)
         self.go_space()
         lines_cleared = self.clearedlines - lines_cleared_old
-        if not self.state == "gameover":
-            self.new_tetromino()
-        return lines_cleared, self.state == "gameover"
+        if lines_cleared > 0:
+            reward = 1
+        return reward, self.gamestate == "gameover"
     
 
 

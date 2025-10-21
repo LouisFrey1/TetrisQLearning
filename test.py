@@ -77,7 +77,7 @@ def display(tetris):
                                     tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2])
     pygame.display.flip()
-    pygame.time.wait(50)    
+    pygame.time.wait(100)    
     
 if __name__ == "__main__":
     opt = get_args()
