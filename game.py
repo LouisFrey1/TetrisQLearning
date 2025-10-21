@@ -52,20 +52,20 @@ class Tetris:
         return intersection
 
     def break_lines(self):
-        lines = 0
-        for i in range(1, self.height):
-            zeros = 0
+        i = self.height - 1
+        while i >= 0:
+            full = True
             for j in range(self.width):
                 if self.field[i][j] == 0:
-                    zeros += 1
-            if zeros == 0:
-                lines += 1
-                for i1 in range(i, 1, -1):
-                    for j in range(self.width):
-                        self.field[i1][j] = self.field[i1 - 1][j]
-                self.field[0] = [0 for _ in range(self.width)]
-        if lines > 0:
-            self.clearedlines += lines
+                    full = False
+                    break
+            if full:
+                # remove the full row and insert an empty one at the top
+                del self.field[i]
+                self.field.insert(0, [0] * self.width)
+                self.clearedlines += 1
+            else:
+                i -= 1
             
 
     def go_space(self):
