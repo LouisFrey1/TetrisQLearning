@@ -6,15 +6,6 @@ GRAY = (128, 128, 128)
 SIZE = (400, 500)
 FPS = 60
 
-ALPHA = 1
-GAMMA = 1
-EPSILON = 1
-
-HEIGHT_WEIGHT = -0.510066
-LINES_WEIGHT = 0.760666
-HOLES_WEIGHT = -0.35663
-BUMPINESS_WEIGHT = -0.184483
-
 colors = [
     (0, 255, 255), # I
     (255, 0, 0), # Z
@@ -23,7 +14,6 @@ colors = [
     (255, 128, 0), # L
     (127, 0, 255), # T
     (255, 255, 0), # O
-    GRAY
 ]
 
 tetrominos = [

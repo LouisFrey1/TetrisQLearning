@@ -23,16 +23,15 @@ def get_args():
     parser.add_argument("--height", type=int, default=20, help="The common height for all images")
     parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
     parser.add_argument("--batch_size", type=int, default=512, help="The number of images per batch")
-    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--lr", type=float, default=0.01, help="Learning rate")
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--initial_epsilon", type=float, default=1)
     parser.add_argument("--final_epsilon", type=float, default=1e-3)
     parser.add_argument("--num_decay_epochs", type=float, default=2000)
-    parser.add_argument("--num_epochs", type=int, default=3000)
-    parser.add_argument("--save_interval", type=int, default=1000)
+    parser.add_argument("--num_epochs", type=int, default=4000)
+    parser.add_argument("--save_interval", type=int, default=2000)
     parser.add_argument("--replay_memory_size", type=int, default=30000,
                         help="Number of epoches between testing phases")
-    parser.add_argument("--log_path", type=str, default="tensorboard")
     parser.add_argument("--saved_path", type=str, default="trained_models")
 
     args = parser.parse_args()
@@ -131,8 +130,8 @@ def train(opt, displayBoard=False):
             final_cleared_lines))
         writer.add_scalar('Train/Cleared lines', final_cleared_lines, epoch - 1)
 
-        if epoch > 0 and epoch % opt.save_interval == 0:
-            torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
+        #if epoch > 0 and epoch % opt.save_interval == 0:
+        #    torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
 
     if not os.path.exists(opt.saved_path):
         os.makedirs(opt.saved_path)
@@ -181,4 +180,4 @@ def display(tetris):
 
 if __name__ == "__main__":
     opt = get_args()
-    train(opt, displayBoard=True)
+    train(opt, displayBoard=False)

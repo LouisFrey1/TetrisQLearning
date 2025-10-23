@@ -21,7 +21,7 @@ def get_args():
     return args
 
 
-def test(opt, displayBoard=True):
+def test(opt, filename, displayBoard=True):
     torch.serialization.add_safe_globals([torch.nn.modules.container.Sequential])
     torch.serialization.safe_globals([DeepQNetwork])
     if torch.cuda.is_available():
@@ -29,9 +29,9 @@ def test(opt, displayBoard=True):
     else:
         torch.manual_seed(123)
     if torch.cuda.is_available():
-        model = torch.load("{}/tetris_final".format(opt.saved_path))
+        model = torch.load("{}/{}}".format(opt.saved_path, filename))
     else:
-        model = torch.load("{}/tetris_final".format(opt.saved_path), weights_only=False, map_location=lambda storage, loc: storage)
+        model = torch.load("{}/{}".format(opt.saved_path, filename), weights_only=False, map_location=lambda storage, loc: storage)
     model.eval()
     env = Tetris(width=opt.width, height=opt.height)
     if torch.cuda.is_available():
@@ -82,6 +82,9 @@ def display(tetris):
 if __name__ == "__main__":
     opt = get_args()
     sim_length = 100
+    scores = []
     for i in range(sim_length):
-        score = test(opt, displayBoard=False)
+        score = test(opt, "tetris_4000", displayBoard=False)
+        scores.append(score)
         print("Simulation: {}/{}: Score {}".format(i+1, sim_length, score))  
+    print("Average Score over {} simulations: {}".format(sim_length, sum(scores)/len(scores)))

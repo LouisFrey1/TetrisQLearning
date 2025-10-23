@@ -45,10 +45,6 @@ Due to its simplicity, this model only considers dropping the tetrominos from th
 
 This model produces decent results, but does not run infinitely. When the blocks are stacked very high, this solution often prioritizes a low bumpiness instead of reducing the height, usually waiting for a I-Tetromino, while ignoring the threat of game over. When the is no way to immediately clear a line, this model doesn't prepare to clear it in the near future; instead it focuses on not creating holes. Furthermore, it seems too comfortable letting the blocks stack up over the halfway point, allowing holes to form in the process and allowing for a quicker defeat.
 
-Average score: 391.01
-Max score: 1674
-Min score: 33
-
 After running 100 games, the hardcoded model achieved an average of 391.01 lines cleared, with the worst score being 55 lines cleared and the best score being 1674 lines cleared. As these results show, there is a lot of room for improvement.
 
 ## Hardcoded With Lookahead
@@ -66,8 +62,16 @@ After reaching 100.000 lines cleared, it is safe to assume that this solution al
 
 The downside of this solution is the much lower performance. While the previous model only had to simulate p \times r possible actions, this version has to simulate p1 \times r1 \times p2 \times r2 possible actions. If p1=p2=p=8 and r1=r2=r=4, this results in 1024 simulations instead of 32.
 
+## Deep Q-Learning
 
-
+0.01:
+Average Score over 100 simulations: 225.89
+Single (0.001):
+Average Score over 100 simulations: 135.47
+4000:
+Average Score over 100 simulations: 223.72
+10000:
+Average Score over 100 simulations: 78.75
 ## Sources
 
 https://github.com/vietnh1009/Tetris-deep-Q-learning-pytorch/

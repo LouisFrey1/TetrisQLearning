@@ -62,7 +62,8 @@ class Tetris:
         return intersection
 
     def break_lines(self):
-        for i in range(self.height - 1, -1, -1):
+        i = self.height - 1
+        while i >= 0:
             full = True
             for j in range(self.width):
                 if self.field[i][j] == 0:
@@ -73,7 +74,8 @@ class Tetris:
                 del self.field[i]
                 self.field.insert(0, [0] * self.width)
                 self.clearedlines += 1
-            
+            else:
+                i -= 1
 
     def go_space(self):
         if self.gamestate == "start":
@@ -174,7 +176,7 @@ class Tetris:
                 simulated_game.go_space()
                 states[(x, i)] = simulated_game.get_state()
         return states
-    
+    '''
     def get_next_states_lookahead(self):
         states = {}
         num_rotations = len(constants.tetrominos[self.tetromino.type])
@@ -196,9 +198,8 @@ class Tetris:
                     max_lines = simulated_game.clearedlines
                     max_lines_action = (x, i)
         return states[max_lines_action]
-    
+    '''
     def step(self, action):
-        reward = 0
         lines_cleared_old = self.clearedlines
         (x, rotation) = action
         for _ in range(rotation):
@@ -207,9 +208,8 @@ class Tetris:
             self.go_side(-1)
         self.go_side(x)
         self.go_space()
-        lines_cleared = self.clearedlines - lines_cleared_old
-        if lines_cleared > 0:
-            reward = 1
+        reward = self.clearedlines - lines_cleared_old
+        reward = int(reward > 0) # clearing multiple lines at once still gives reward of 1
         return reward, self.gamestate == "gameover"
     
 
