@@ -28,8 +28,8 @@ def get_args():
     parser.add_argument("--initial_epsilon", type=float, default=1)
     parser.add_argument("--final_epsilon", type=float, default=1e-3)
     parser.add_argument("--num_decay_epochs", type=float, default=2000)
-    parser.add_argument("--num_epochs", type=int, default=4000)
-    parser.add_argument("--save_interval", type=int, default=2000)
+    parser.add_argument("--num_epochs", type=int, default=5000)
+    parser.add_argument("--save_interval", type=int, default=1000)
     parser.add_argument("--replay_memory_size", type=int, default=30000,
                         help="Number of epoches between testing phases")
     parser.add_argument("--saved_path", type=str, default="trained_models")
@@ -56,14 +56,32 @@ def train(opt, displayBoard=False):
     replay_memory = deque(maxlen=opt.replay_memory_size)
     epoch = 0
     while epoch < opt.num_epochs:
+        prev_clearedlines = env.clearedlines
         env.new_tetromino()
         # Draws field
         if displayBoard:
             display(env)
-        next_steps = env.get_next_states()
+        next_steps, lookahead_steps = env.get_next_states()
         # Exploration or exploitation
         epsilon = opt.final_epsilon + (max(opt.num_decay_epochs - epoch, 0) * (
                 opt.initial_epsilon - opt.final_epsilon) / opt.num_decay_epochs)
+        for action_key in next_steps.keys():
+            lookahead_state_list = lookahead_steps[action_key]
+            u = random()
+            random_action = u <= epsilon
+            lookahead_states = torch.stack(lookahead_state_list)
+            if torch.cuda.is_available():
+                lookahead_states = lookahead_states.cuda()
+            model.eval()
+            with torch.no_grad():
+                lookahead_predictions = model(lookahead_states)[:, 0]
+            model.train()
+            if random_action:
+                index = randint(0, len(lookahead_state_list) - 1)
+            else:
+                index = torch.argmax(lookahead_predictions).item()
+            next_steps[action_key] = lookahead_states[index, :]
+            
         u = random()
         random_action = u <= epsilon
         next_actions, next_states = zip(*next_steps.items())
@@ -82,7 +100,8 @@ def train(opt, displayBoard=False):
         next_state = next_states[index, :]
         action = next_actions[index]
 
-        reward, done = env.step(action)
+        _, done = env.step(action)
+        reward = env.clearedlines - prev_clearedlines
 
         if torch.cuda.is_available():
             next_state = next_state.cuda()
@@ -130,8 +149,8 @@ def train(opt, displayBoard=False):
             final_cleared_lines))
         writer.add_scalar('Train/Cleared lines', final_cleared_lines, epoch - 1)
 
-        #if epoch > 0 and epoch % opt.save_interval == 0:
-        #    torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
+        if epoch > 0 and epoch % opt.save_interval == 0:
+            torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
 
     if not os.path.exists(opt.saved_path):
         os.makedirs(opt.saved_path)
@@ -159,7 +178,7 @@ def display(tetris):
                                     [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2])
-    '''               
+                   
     # Draws next block
     if tetris.next_tetromino is not None:
         for i in range(4):
@@ -174,9 +193,8 @@ def display(tetris):
                                     [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2], 1)
-    '''
+    
     pygame.display.flip()
-    pygame.time.wait(10)
 
 if __name__ == "__main__":
     opt = get_args()

@@ -162,6 +162,7 @@ class Tetris:
     
     def get_next_states(self):
         states = {}
+        lookahead_states = {}  
         num_rotations = len(constants.tetrominos[self.tetromino.type])
         for i in range(num_rotations):
             valid_xs = self.width - self.tetromino.get_length(i) + 1
@@ -175,13 +176,12 @@ class Tetris:
                 simulated_game.go_side(x)
                 simulated_game.go_space()
                 states[(x, i)] = simulated_game.get_state()
-        return states
-    '''
+                lookahead_states[(x, i)] = simulated_game.get_next_states_lookahead()
+        return states, lookahead_states
+    
     def get_next_states_lookahead(self):
-        states = {}
+        states = []
         num_rotations = len(constants.tetrominos[self.tetromino.type])
-        max_lines = -1
-        max_lines_action = (0,0)
         for i in range(num_rotations):
             valid_xs = self.width - self.tetromino.get_length(i) + 1
             for x in range(valid_xs):
@@ -193,12 +193,10 @@ class Tetris:
                     simulated_game.go_side(-1)
                 simulated_game.go_side(x)
                 simulated_game.go_space()
-                states[(x, i)] = simulated_game.get_state()
-                if simulated_game.clearedlines > max_lines:
-                    max_lines = simulated_game.clearedlines
-                    max_lines_action = (x, i)
-        return states[max_lines_action]
-    '''
+                states.append(simulated_game.get_state())
+        return states
+    
+
     def step(self, action):
         lines_cleared_old = self.clearedlines
         (x, rotation) = action
