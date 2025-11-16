@@ -57,6 +57,23 @@ def train(opt, displayBoard=False):
     epoch = 0
     while epoch < opt.num_epochs:
         env.new_tetromino()
+        # Increase frequency of difficult pieces (Z, S)
+        a = random()
+        if a <= 0.25:
+            env.tetromino.type = 1 # Z
+        elif a <= 0.5:
+            env.tetromino.type = 2 # S
+        elif a <= 0.6:
+            env.tetromino.type = 3 # J
+        elif a <= 0.7:
+            env.tetromino.type = 4 # L
+        elif a <= 0.8:
+            env.tetromino.type = 5 # T
+        elif a <= 0.9: 
+            env.tetromino.type = 6 # O
+        else:
+            env.tetromino.type = 0 # I
+
         # Draws field
         if displayBoard:
             display(env)

@@ -13,7 +13,7 @@ A project implementing Q-Learning for the game Tetris.
 
 This project explores reinforcement learning by applying Q-Learning to the classic game Tetris.
 
-## Installation and start-up
+## Installation 
 
 ```bash
 git clone https://github.com/LouisFrey1/TetrisQLearning.git
@@ -21,12 +21,12 @@ cd TetrisQLearning
 python -m venv venv
 venv\Scripts\Activate
 pip install -r requirements.txt
-py simulation.py
 ```
 
 ## Base Game
+Start game: py simulation.py
 
-This branch contains the base game of tetris for the user to play. Use the left and right arrow keys to move the tetromino, the up arrow key to rotate and the spacebar to drop the tetromino. To pause the game, press "p"; to leave press ESC.
+This branch contains the base game of tetris for the user to play themselves. Use the left and right arrow keys to move the tetromino, the up arrow key to rotate and the spacebar to drop the tetromino. To pause the game, press "p"; to leave press ESC.
 
 ## Hardcoded
 
@@ -72,6 +72,8 @@ Average Score over 100 simulations: 135.47
 Average Score over 100 simulations: 223.72
 10000:
 Average Score over 100 simulations: 78.75
+Harder:
+Average Score over 100 simulations: 135.21
 ## Sources
 
 https://github.com/vietnh1009/Tetris-deep-Q-learning-pytorch/
