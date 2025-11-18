@@ -130,7 +130,7 @@ class Tetris:
             total_field[y+i//4][x+i%4] = 1
         return total_field
         
-
+    
     def get_holes(self):
         holes = 0
         for j in range(self.width):
