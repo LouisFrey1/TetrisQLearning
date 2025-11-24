@@ -69,7 +69,7 @@ Average Score over 100 simulations: 225.89
 Single (0.001):
 Average Score over 100 simulations: 135.47
 4000:
-Average Score over 100 simulations: 223.72
+Average Score over 100 simulations: 229.74
 10000:
 Average Score over 100 simulations: 78.75
 ## Sources

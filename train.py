@@ -6,7 +6,6 @@ from random import random, randint, sample
 import numpy as np
 import torch
 import torch.nn as nn
-#from tensorboardX import SummaryWriter
 from torch.utils.tensorboard import SummaryWriter
 
 from DeepQNetwork import DeepQNetwork
@@ -21,7 +20,6 @@ def get_args():
         """Implementation of Deep Q Network to play Tetris""")
     parser.add_argument("--width", type=int, default=10, help="The common width for all images")
     parser.add_argument("--height", type=int, default=20, help="The common height for all images")
-    parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
     parser.add_argument("--batch_size", type=int, default=512, help="The number of images per batch")
     parser.add_argument("--lr", type=float, default=0.01, help="Learning rate")
     parser.add_argument("--gamma", type=float, default=0.99)
@@ -159,22 +157,6 @@ def display(tetris):
                                     [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2])
-    '''               
-    # Draws next block
-    if tetris.next_tetromino is not None:
-        for i in range(4):
-            for j in range(4):
-                p = i * 4 + j
-                if p in tetris.next_tetromino.image():
-                    pygame.draw.rect(screen, constants.colors[tetris.next_tetromino.type],
-                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
-                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
-                                    tetris.zoom - 2, tetris.zoom - 2])
-                    pygame.draw.rect(screen, constants.GRAY, 
-                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
-                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
-                                    tetris.zoom - 2, tetris.zoom - 2], 1)
-    '''
     pygame.display.flip()
     pygame.time.wait(10)
 

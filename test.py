@@ -84,7 +84,7 @@ if __name__ == "__main__":
     sim_length = 100
     scores = []
     for i in range(sim_length):
-        score = test(opt, "tetris_4000", displayBoard=False)
+        score = test(opt, "tetris_final", displayBoard=False)
         scores.append(score)
         print("Simulation: {}/{}: Score {}".format(i+1, sim_length, score))  
     print("Average Score over {} simulations: {}".format(sim_length, sum(scores)/len(scores)))
