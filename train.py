@@ -33,12 +33,14 @@ def get_args():
     parser.add_argument("--replay_memory_size", type=int, default=30000,
                         help="Number of epoches between testing phases")
     parser.add_argument("--saved_path", type=str, default="trained_models")
+    parser.add_argument("--file_name", type=str, default="tetris_final")
+    parser.add_argument("--display_board", default=False, help="Whether to display the tetris board during the training process")
 
     args = parser.parse_args()
     return args
 
 
-def train(opt, displayBoard=False):
+def train(opt):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(123)
     else:
@@ -75,7 +77,7 @@ def train(opt, displayBoard=False):
             env.tetromino.type = 0 # I
 
         # Draws field
-        if displayBoard:
+        if opt.display_board:
             display(env)
         next_steps = env.get_next_states()
         # Exploration or exploitation
@@ -147,12 +149,12 @@ def train(opt, displayBoard=False):
             final_cleared_lines))
         writer.add_scalar('Train/Cleared lines', final_cleared_lines, epoch - 1)
 
-        #if epoch > 0 and epoch % opt.save_interval == 0:
-        #    torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
+        if opt.save_interval and epoch > 0 and epoch % opt.save_interval == 0:
+            torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
 
     if not os.path.exists(opt.saved_path):
         os.makedirs(opt.saved_path)
-    torch.save(model, "{}/tetris_final".format(opt.saved_path))
+    torch.save(model, "{}/{}".format(opt.saved_path, opt.file_name))
 
 
 def display(tetris):
@@ -176,25 +178,10 @@ def display(tetris):
                                     [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2])
-    '''               
-    # Draws next block
-    if tetris.next_tetromino is not None:
-        for i in range(4):
-            for j in range(4):
-                p = i * 4 + j
-                if p in tetris.next_tetromino.image():
-                    pygame.draw.rect(screen, constants.colors[tetris.next_tetromino.type],
-                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
-                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
-                                    tetris.zoom - 2, tetris.zoom - 2])
-                    pygame.draw.rect(screen, constants.GRAY, 
-                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
-                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
-                                    tetris.zoom - 2, tetris.zoom - 2], 1)
-    '''
+    
     pygame.display.flip()
     pygame.time.wait(10)
 
 if __name__ == "__main__":
     opt = get_args()
-    train(opt, displayBoard=False)
+    train(opt)
