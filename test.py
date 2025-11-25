@@ -84,7 +84,10 @@ if __name__ == "__main__":
     sim_length = 100
     scores = []
     for i in range(sim_length):
-        score = test(opt, "tetris_10000", displayBoard=False)
+        file_name = input('Enter the model filename to test (default = tetris_final): ')
+        if file_name == '':
+            file_name = 'tetris_final'
+        score = test(opt, file_name, displayBoard=False)
         scores.append(score)
         print("Simulation: {}/{}: Score {}".format(i+1, sim_length, score))  
     print("Average Score over {} simulations: {}".format(sim_length, sum(scores)/len(scores)))
