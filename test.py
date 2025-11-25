@@ -15,15 +15,14 @@ def get_args():
     parser.add_argument("--width", type=int, default=10, help="The common width for all images")
     parser.add_argument("--height", type=int, default=20, help="The common height for all images")
     parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
-    parser.add_argument("--fps", type=int, default=300, help="frames per second")
     parser.add_argument("--saved_path", type=str, default="trained_models")
-    parser.add_argument("--output", type=str, default="output.mp4")
     parser.add_argument("--file_name", type=str, default="tetris_final")
+    parser.add_argument("--display_board", type=bool, default=False, help="Whether to display the game board while testing")
     args = parser.parse_args()
     return args
 
 
-def test(opt, displayBoard=True):
+def test(opt):
     if os.path.isfile("{}/{}".format(opt.saved_path, opt.file_name)) is False:
         print("No trained model with this name found!")
         return -1
@@ -43,7 +42,7 @@ def test(opt, displayBoard=True):
         model.cuda()
     while True:
         env.new_tetromino()
-        if displayBoard:
+        if opt.displayBoard:
             display(env)
 
         next_steps = env.get_next_states()
@@ -89,7 +88,7 @@ if __name__ == "__main__":
     sim_length = 100
     scores = []
     for i in range(sim_length):
-        score = test(opt, displayBoard=False)
+        score = test(opt)
         if score == -1:
             break
         scores.append(score)
