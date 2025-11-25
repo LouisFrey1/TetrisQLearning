@@ -31,7 +31,7 @@ def get_args():
     parser.add_argument("--replay_memory_size", type=int, default=30000,
                         help="Number of epoches between testing phases")
     parser.add_argument("--saved_path", type=str, default="trained_models")
-
+    parser.add_argument("--file_name", type=str, default="tetris_final")
     args = parser.parse_args()
     return args
 

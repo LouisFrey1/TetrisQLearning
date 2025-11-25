@@ -1,10 +1,12 @@
 
 import argparse
+import os.path
 import torch
 import pygame
 import constants
 from game import Tetris
 from DeepQNetwork import DeepQNetwork
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -16,12 +18,15 @@ def get_args():
     parser.add_argument("--fps", type=int, default=300, help="frames per second")
     parser.add_argument("--saved_path", type=str, default="trained_models")
     parser.add_argument("--output", type=str, default="output.mp4")
-
+    parser.add_argument("--file_name", type=str, default="tetris_final")
     args = parser.parse_args()
     return args
 
 
-def test(opt, filename, displayBoard=True):
+def test(opt, displayBoard=True):
+    if os.path.isfile("{}/{}".format(opt.saved_path, opt.file_name)) is False:
+        print("No trained model with this name found!")
+        return -1
     torch.serialization.add_safe_globals([torch.nn.modules.container.Sequential])
     torch.serialization.safe_globals([DeepQNetwork])
     if torch.cuda.is_available():
@@ -29,9 +34,9 @@ def test(opt, filename, displayBoard=True):
     else:
         torch.manual_seed(123)
     if torch.cuda.is_available():
-        model = torch.load("{}/{}}".format(opt.saved_path, filename))
+        model = torch.load("{}/{}}".format(opt.saved_path, opt.file_name))
     else:
-        model = torch.load("{}/{}".format(opt.saved_path, filename), weights_only=False, map_location=lambda storage, loc: storage)
+        model = torch.load("{}/{}".format(opt.saved_path, opt.file_name), weights_only=False, map_location=lambda storage, loc: storage)
     model.eval()
     env = Tetris(width=opt.width, height=opt.height)
     if torch.cuda.is_available():
@@ -84,7 +89,9 @@ if __name__ == "__main__":
     sim_length = 100
     scores = []
     for i in range(sim_length):
-        score = test(opt, "tetris_final", displayBoard=False)
+        score = test(opt, displayBoard=False)
+        if score == -1:
+            break
         scores.append(score)
         print("Simulation: {}/{}: Score {}".format(i+1, sim_length, score))  
-    print("Average Score over {} simulations: {}".format(sim_length, sum(scores)/len(scores)))
+    print("Average Score over {} simulations: {}".format(sim_length, sum(scores)/sim_length))
