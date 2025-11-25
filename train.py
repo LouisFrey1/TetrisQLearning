@@ -33,12 +33,14 @@ def get_args():
     parser.add_argument("--replay_memory_size", type=int, default=30000,
                         help="Number of epoches between testing phases")
     parser.add_argument("--saved_path", type=str, default="trained_models")
+    parser.add_argument("--file_name", type=str, default="tetris_final")
+    parser.add_argument("--display_board", type=bool, default=False, help="Whether to display the game board while training")
 
     args = parser.parse_args()
     return args
 
 
-def train(opt, displayBoard=False):
+def train(opt):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(123)
     else:
@@ -59,7 +61,7 @@ def train(opt, displayBoard=False):
         prev_clearedlines = env.clearedlines
         env.new_tetromino()
         # Draws field
-        if displayBoard:
+        if opt.display_board:
             display(env)
         next_steps, lookahead_steps = env.get_next_states()
         # Exploration or exploitation
@@ -149,12 +151,12 @@ def train(opt, displayBoard=False):
             final_cleared_lines))
         writer.add_scalar('Train/Cleared lines', final_cleared_lines, epoch - 1)
 
-        if epoch > 0 and epoch % opt.save_interval == 0:
+        if opt.save_interval and epoch > 0 and epoch % opt.save_interval == 0:
             torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
 
     if not os.path.exists(opt.saved_path):
         os.makedirs(opt.saved_path)
-    torch.save(model, "{}/tetris_final".format(opt.saved_path))
+    torch.save(model, "{}/{}".format(opt.saved_path, opt.file_name))
 
 
 def display(tetris):
@@ -198,4 +200,4 @@ def display(tetris):
 
 if __name__ == "__main__":
     opt = get_args()
-    train(opt, displayBoard=False)
+    train(opt)
