@@ -29,6 +29,7 @@ Start game: py simulation.py
 This branch contains the base game of tetris for the user to play themselves. Use the left and right arrow keys to move the tetromino, the up arrow key to rotate and the spacebar to drop the tetromino. To pause the game, press "p"; to leave press ESC.
 
 ## Hardcoded
+Start game: py simulation.py
 
 In the simplest version, the best possible action is decided by simulating all possible actions for the current tetromino (all rotations r and placements p), and calculating 4 values:
 - Total height of all columns (a)
@@ -48,6 +49,7 @@ This model produces decent results, but does not run infinitely. When the blocks
 After running 100 games, the hardcoded model achieved an average of 391.01 lines cleared, with scores ranging between 55 lines cleared and 1674 lines cleared. As these results show, there is a lot of room for improvement.
 
 ## Hardcoded With Lookahead
+Start game: py simulation.py
 
 This solution extends the hardcoded version by adding the lookahead piece into the calculation of the best possible move. The fitness of a move is now calculated using the state after 2 moves, instead of just one. This allows the model to think ahead and pull off more complicated maneuvers.
 
@@ -60,27 +62,53 @@ After reaching 100.000 lines cleared, it is safe to assume that this solution al
 ![Tetris Screenshot](images/Screenshot4.png)
 
 
-The only downside of this solution is the much slower performance. While the previous model only had to simulate p \times r possible actions, this version has to simulate p1 \times r1 \times p2 \times r2 possible actions. If p1=p2=p=8 and r1=r2=r=4, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
+The only downside of this solution is the much slower performance. While the previous model only had to simulate p * r possible actions, this version has to simulate p1 * r1 * p2 * r2 possible actions. If p1=p2=p=8 and r1=r2=r=4, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
 
 ## Deep Q-Learning
+Train model: 
+```console py train.py (--lr <learning rate> --gamma <gamma> --num_epochs <number of epochs> --file_name <filename> --display_board <True/False>) --save_interval <save_interval>
+```
+The trained model is saved at trained_models/<filename> (tetris_final by default). An additional model is saved at trained_models/"tetris_<epoch>" every <save_interval> epochs (Disabled by default).
+To view the training progress and compare to other models, use tensorboard --logdir=runs
 
-In this branch, I created a Deep Q-Learning Network, that 
+Test model: 
+```shell
+py test.py (--file_name <filename> --display_board <True/False>)
+```
+Activate display_board to show the board during training/testing. False by default.
 
-0.01:
+The function get_args() in train.py and test.py shows additional optional parameters.
+
+In this branch, I created a Deep Q-Learning Network, that takes a 4-dimensional vector containing the state (height, lines cleared, bumpiness, number of holes) as input and returns a fitness value for the given state, using a hidden layer with 64 units. The weights are initialized using the xavier uniform function.
+
+
+Single (lr 0.01):
 Average Score over 100 simulations: 225.89
-Single (0.001):
+Multi (lr 0.01):
+Average Score over 100 simulations: 155.27
+Single (lr 0.001):
 Average Score over 100 simulations: 135.47
-4000:
-Average Score over 100 simulations: 223.72
-10000:
+10000 epochs:
 Average Score over 100 simulations: 78.75
-Harder:
+Harder (Single):
 Average Score over 100 simulations: 135.21
+Harder (Multi):
+Average Score over 100 simulations: 178.31
+
+## DeepQLearningLookahead
+
+## DeepQLearningLookaheadStates
+
+## DeepQLearningDifficult
+
+https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequency of more difficult blocks (Z and N) increases the quality of the model significantly. 
+
 ## Sources
 
 https://github.com/vietnh1009/Tetris-deep-Q-learning-pytorch/
 https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player
 https://gist.github.com/timurbakibayev/1f683d34487362b0f36280989c80960c
+https://www.ideals.illinois.edu/items/118525
 
 ## License
 
