@@ -35,19 +35,14 @@ class Tetris:
             self.field.append(new_line)
         return torch.FloatTensor([0, 0, 0, 0]) 
 
+    # Generates a new tetromino and checks for game over
     def new_tetromino(self):
         self.tetromino = self.next_tetromino
         self.next_tetromino = tetromino.Tetromino(3, 0)
         if self.intersects():
-            self.gamestate = "gameover"
+            self.gamestate = "gameover"        
 
-    def pause(self):
-        if self.gamestate == "start":
-            self.gamestate = "pause"
-        elif self.gamestate == "pause":
-            self.gamestate = "start"
-        
-
+    # Checks if the current tetromino intersects with the field or borders
     def intersects(self):
         intersection = False
         for square in self.tetromino.image():
@@ -61,6 +56,7 @@ class Tetris:
                 intersection = True
         return intersection
 
+    # Removes full lines from the field
     def break_lines(self):
         i = self.height - 1
         while i >= 0:
@@ -77,6 +73,7 @@ class Tetris:
             else:
                 i -= 1
 
+    # Drops the tetromino to the bottom
     def go_space(self):
         if self.gamestate == "start":
             while not self.intersects():
@@ -84,20 +81,7 @@ class Tetris:
             self.tetromino.y -= 1
             self.freeze()
 
-    def go_down(self):
-        if self.gamestate == "start":
-            self.tetromino.y += 1
-            if self.intersects():
-                self.tetromino.y -= 1
-                self.freeze()
-
-    def go_up(self):
-        if self.gamestate == "start":
-            old_y = self.tetromino.y
-            self.tetromino.y -= 1
-            if self.intersects():
-                self.tetromino.y = old_y
-
+    # Freezes the tetromino in place, checks for full lines and generates a new tetromino
     def freeze(self):
         for i in range(4):
             for j in range(4):
@@ -106,6 +90,7 @@ class Tetris:
         self.break_lines()
         self.new_tetromino()
 
+    # Moves the tetromino left or right
     def go_side(self, dx):
         if self.gamestate == "start":
             old_x = self.tetromino.x
@@ -113,11 +98,11 @@ class Tetris:
             if self.intersects():
                 self.tetromino.x = old_x
 
+    # Rotates the tetromino 90 degrees clockwise
     def rotate(self):
         if self.gamestate == "start":
             old_rotation = self.tetromino.rotation
             self.tetromino.rotate()
-            # Try to move tile left and right once to enable rotating at the edge
             if self.intersects():
                 self.tetromino.rotation = old_rotation
         
@@ -130,20 +115,25 @@ class Tetris:
             total_field[y+i//4][x+i%4] = 1
         return total_field
         
-
+    # Calculates the number of empty spaces (holes) below filled spaces in the field
     def get_holes(self):
         holes = 0
         for j in range(self.width):
             i = 0
+            # Find the first filled cell in the column
             while i < self.height and self.field[i][j] == 0:
                 i += 1
+            
+            # Count empty cells below the first filled cell
             while i < self.height:
                 if self.field[i][j] == 0:
                     holes += 1
                 i += 1
         return holes
 
+    # Calculate the height difference between adjacent columns and the total height
     def get_bumpiness(self):
+        # Calculate the heights of each column
         column_heights = np.zeros(self.width)
         for j in range(self.width):
             for i in range(self.height):
@@ -151,20 +141,26 @@ class Tetris:
                     column_heights[j] = self.height - i
                     break
         total_height = np.sum(column_heights)
+
+        # Calculate the height difference between adjacent columns
         bumpiness = np.abs(column_heights[:-1] - column_heights[1:])
         total_bumpiness = np.sum(bumpiness)
         return total_bumpiness, total_height
     
+    # Returns the current state as a tensor of features
     def get_state(self):
         holes = self.get_holes()
         bumpiness, height = self.get_bumpiness()
         return torch.FloatTensor([height, self.clearedlines, holes, bumpiness])
     
+    # Simulates all possible next states for the current tetromino
     def get_next_states(self):
         states = {}
         num_rotations = len(constants.tetrominos[self.tetromino.type])
+        # Simulate all possible rotations
         for i in range(num_rotations):
             valid_xs = self.width - self.tetromino.get_length(i) + 1
+            # Simulate all possible horizontal positions
             for x in range(valid_xs):
                 if x + self.tetromino.get_end() > self.width:
                     break
@@ -174,42 +170,24 @@ class Tetris:
                     simulated_game.go_side(-1)
                 simulated_game.go_side(x)
                 simulated_game.go_space()
+                # Save the resulting state for this rotation and position
                 states[(x, i)] = simulated_game.get_state()
         return states
-    '''
-    def get_next_states_lookahead(self):
-        states = {}
-        num_rotations = len(constants.tetrominos[self.tetromino.type])
-        max_lines = -1
-        max_lines_action = (0,0)
-        for i in range(num_rotations):
-            valid_xs = self.width - self.tetromino.get_length(i) + 1
-            for x in range(valid_xs):
-                if x + self.tetromino.get_end() > self.width:
-                    break
-                simulated_game = copy.deepcopy(self)
-                simulated_game.tetromino.rotation = i
-                for _ in range(5):
-                    simulated_game.go_side(-1)
-                simulated_game.go_side(x)
-                simulated_game.go_space()
-                states[(x, i)] = simulated_game.get_state()
-                if simulated_game.clearedlines > max_lines:
-                    max_lines = simulated_game.clearedlines
-                    max_lines_action = (x, i)
-        return states[max_lines_action]
-    '''
+    
+    # Executes the given action and returns the reward
     def step(self, action):
         lines_cleared_old = self.clearedlines
         (x, rotation) = action
+        # Execute the action
         for _ in range(rotation):
             self.rotate()
         for _ in range(5):
             self.go_side(-1)
         self.go_side(x)
         self.go_space()
-        reward = self.clearedlines - lines_cleared_old
-        reward = int(reward > 0) # clearing multiple lines at once still gives reward of 1
+        reward = 1 + (self.clearedlines - lines_cleared_old)
+        #reward = 1 + (self.clearedlines - lines_cleared_old)^2
+        #reward = int((self.clearedlines - lines_cleared_old) > 0) # clearing multiple lines at once still gives reward of 1
         return reward, self.gamestate == "gameover"
     
 

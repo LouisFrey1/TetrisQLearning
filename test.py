@@ -42,7 +42,7 @@ def test(opt):
         model.cuda()
     while True:
         env.new_tetromino()
-        if opt.displayBoard:
+        if opt.display_board:
             display(env)
 
         next_steps = env.get_next_states()

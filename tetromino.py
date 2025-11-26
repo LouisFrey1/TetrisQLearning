@@ -14,9 +14,6 @@ class Tetromino:
         self.type = random.randint(0, len(constants.tetrominos) - 1)
         self.rotation = 0
         self.droppedlines = 0
-        self.freezetimer = None
-        self.spacetimer = None
-        self.actionlist = {}
 
     
     
@@ -26,18 +23,16 @@ class Tetromino:
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(constants.tetrominos[self.type])
 
+    # Returns the start column of the tetromino based on its current rotation
     def get_start(self):
-        temp = np.array(self.image())
-        temp = temp % 4
-        return np.min(temp)
+        return np.min(np.array(self.image()) % 4)
 
+    # Returns the end column of the tetromino based on its current rotation
     def get_end(self):
-        temp = np.array(self.image())
-        temp = temp % 4
-        return np.max(temp)
+        return np.max(np.array(self.image()) % 4)
 
+    # Returns the length of the tetromino based on the input rotation
     def get_length(self, rotation):
-        temp = np.array(constants.tetrominos[self.type][rotation])
-        temp = temp % 4
+        temp = np.array(constants.tetrominos[self.type][rotation]) % 4
         length = np.max(temp) - np.min(temp) + 1
         return length
