@@ -110,6 +110,10 @@ Single (lr 0.01):
 Average Score over 100 simulations: 225.89
 Multi (lr 0.01):
 Average Score over 100 simulations: 155.27
+Quadratic:
+Average Score over 100 simulations: 142.84
+Linear:
+Average Score over 100 simulations: 190.41
 Single (lr 0.001):
 Average Score over 100 simulations: 135.47
 10000 epochs:
