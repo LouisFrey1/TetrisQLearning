@@ -24,12 +24,18 @@ pip install -r requirements.txt
 ```
 
 ## Base Game
-Start game: py simulation.py
+Start game: 
+```bash
+py simulation.py
+```
 
 This branch contains the base game of tetris for the user to play themselves. Use the left and right arrow keys to move the tetromino, the up arrow key to rotate and the spacebar to drop the tetromino. To pause the game, press "p"; to leave press ESC.
 
 ## Hardcoded
-Start game: py simulation.py
+Start game:
+```bash
+py simulation.py
+```
 
 In the simplest version, the best possible action is decided by simulating all possible actions for the current tetromino (all rotations r and placements p), and calculating 4 values:
 - Total height of all columns (a)
@@ -49,8 +55,10 @@ This model produces decent results, but does not run infinitely. When the blocks
 After running 100 games, the hardcoded model achieved an average of 391.01 lines cleared, with scores ranging between 55 lines cleared and 1674 lines cleared. As these results show, there is a lot of room for improvement.
 
 ## Hardcoded With Lookahead
-Start game: py simulation.py
-
+Start game: 
+```bash
+py simulation.py
+```
 This solution extends the hardcoded version by adding the lookahead piece into the calculation of the best possible move. The fitness of a move is now calculated using the state after 2 moves, instead of just one. This allows the model to think ahead and pull off more complicated maneuvers.
 
 ![Tetris Screenshot](images/Screenshot3.png)
@@ -66,13 +74,16 @@ The only downside of this solution is the much slower performance. While the pre
 
 ## Deep Q-Learning
 Train model: 
-```console py train.py (--lr <learning rate> --gamma <gamma> --num_epochs <number of epochs> --file_name <filename> --display_board <True/False>) --save_interval <save_interval>
+```bash
+py train.py (--lr <learning rate> --gamma <gamma> --num_epochs <number of epochs> --file_name <filename> --display_board <True/False>) --save_interval <save_interval>
 ```
 The trained model is saved at trained_models/<filename> (tetris_final by default). An additional model is saved at trained_models/"tetris_<epoch>" every <save_interval> epochs (Disabled by default).
-To view the training progress and compare to other models, use tensorboard --logdir=runs
-
+To view the training progress and compare to other models, use 
+```bash
+tensorboard --logdir=runs
+```
 Test model: 
-```shell
+```bash
 py test.py (--file_name <filename> --display_board <True/False>)
 ```
 Activate display_board to show the board during training/testing. False by default.
