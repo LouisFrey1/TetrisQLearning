@@ -6,6 +6,12 @@ A project implementing Q-Learning for the game Tetris.
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Hardcoded](#hardcoded)
+- [Hardcoded with Lookahead](#hardcodedwithlookahead)
+- [DeepQLearning](#deepqlearning)
+- [DeepQLearningLookahead](#deepqlearninglookahead)
+- [DeepQLearningLookaheadStates](#deepqlearninglookaheadstates)
+- [DeepQLearningDifficult](#deepqlearningdifficult)
 - [Sources](#sources)
 - [License](#license)
 
@@ -44,7 +50,7 @@ In the simplest version, the best possible action is decided by simulating all p
 - Bumpiness: Total difference in height between each pair of adjacent columns (d)
 These values are weighted using the numbers found in https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player to calculate a fitness value for each possible action. The action with the heighest fitness value is always taken.
 
-fitness = -0.510066 \cdot a + 0.760666 \cdot b - 0.35663 \cdot c - 0.184483 \cdot d
+$fitness = -0.510066 \cdot a + 0.760666 \cdot b - 0.35663 \cdot c - 0.184483 \cdot d$
 
 If a move results in a game over, it is assigned a fitness of negative infinity.
 
@@ -70,9 +76,9 @@ After reaching 100.000 lines cleared, it is safe to assume that this solution al
 ![Tetris Screenshot](images/Screenshot4.png)
 
 
-The only downside of this solution is the much slower performance. While the previous model only had to simulate p \cdot r (#possible positions \cdot #possible rotations) possible actions, this version has to simulate p_1 \cdot r_1 \cdot p_2 \cdot r_2 possible actions. If p_1=p_2=p=8 and r_1=r_2=r=4, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
+The only downside of this solution is the much slower performance. While the previous model only had to simulate $p \cdot r (#possible positions \cdot #possible rotations)$ possible actions, this version has to simulate $p_1 \cdot r_1 \cdot p_2 \cdot r_2$ possible actions. If $p_1=p_2=p=8$ and $r_1=r_2=r=4$, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
 
-## Deep Q-Learning
+## DeepQLearning
 Train model: 
 ```bash
 py train.py (--lr <learning rate> --gamma <gamma> --num_epochs <number of epochs> --file_name <filename> --display_board <True/False>) --save_interval <save_interval>
@@ -102,8 +108,11 @@ Training:
 * I utilize a linearly decaying exploration probability \epsilon, that decides whether to take the predicted action or a random action. After 2000 epochs, the \epsilon value settles at 0.001.
 * If the random action is not taken, the deep Q-Network is used to calculate the action that maximizes the fitness of the next state.
 * After an action is chosen, the previous state, the current state and the reward is added to the replay memory.
-* There are multiple options for the reward function: 1 + #lines cleared^2; 1 + #lines cleared; 1, if at least 1 line was cleared.
-* The first 2 options promote a more risky playstyle, that involves leaving a column at the edge, while waiting to clear as many lines as possible with a single tetromino, while the last option prioritizes clearing lines whenever possible.
+* There are multiple options for the reward function:
+  - 1 + #lines cleared^2;
+  - 1 + #lines cleared;
+  - 1, if at least 1 line was cleared.
+* The first 2 options promote a more risky playstyle that involves leaving a column at the edge, while waiting to clear as many lines as possible with a single I-tetromino, while the last option prioritizes clearing lines whenever possible.
 * After each epoch, a minibatch (512 samples) is taken from the replay memory and used to update the weights of the model.
 
 Single (lr 0.01):
