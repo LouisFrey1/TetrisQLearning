@@ -60,7 +60,7 @@ This model produces decent results, but does not run infinitely. When the blocks
 
 After running 100 games, the hardcoded model achieved an average of 391.01 lines cleared, with scores ranging between 55 lines cleared and 1674 lines cleared. As these results show, there is a lot of room for improvement.
 
-## Hardcoded With Lookahead
+## Hardcoded with Lookahead
 Start game: 
 ```bash
 py simulation.py
@@ -90,9 +90,9 @@ tensorboard --logdir=runs
 ```
 Test model: 
 ```bash
-py test.py (--file_name <filename> --display_board <True/False>)
+py test.py (--file_name <filename> --display_board <True/False> --sim_length <Number of runs to test>)
 ```
-Activate display_board to show the board during training/testing. False by default.
+Activate display_board to show the board during training/testing. False by default. Activating this heavily increases the runtime!
 
 The function get_args() in train.py and test.py shows additional optional parameters.
 
@@ -109,36 +109,56 @@ Training:
 * If the random action is not taken, the deep Q-Network is used to calculate the action that maximizes the fitness of the next state.
 * After an action is chosen, the previous state, the current state and the reward is added to the replay memory.
 * There are multiple options for the reward function:
-  - 1 + #lines cleared^2;
-  - 1 + #lines cleared;
-  - 1, if at least 1 line was cleared.
+  - Quadratic: 1 + #lines cleared^2;
+  - Linear: 1 + #lines cleared;
+  - Single: 1, if at least 1 line was cleared.
 * The first 2 options promote a more risky playstyle that involves leaving a column at the edge, while waiting to clear as many lines as possible with a single I-tetromino, while the last option prioritizes clearing lines whenever possible.
-* After each epoch, a minibatch (512 samples) is taken from the replay memory and used to update the weights of the model.
+* After each epoch, a batch of 1024 samples is taken from the replay memory and used to update the weights of the model.
 
-Single (lr 0.01):
+# Comparing reward functions
+
+# Parameter optimization
+
+Single:
 Average Score over 100 simulations: 225.89
-Multi (lr 0.01):
+Multi:
 Average Score over 100 simulations: 155.27
 Quadratic:
 Average Score over 100 simulations: 142.84
 Linear:
 Average Score over 100 simulations: 190.41
+
+Batch size 1024:
+Average Score over 100 simulations: 384.98
+Batch size 2048:
+Average Score over 100 simulations: 111.56
+
+Lr 0.02:
+Average Score over 100 simulations: 254.11
 Single (lr 0.001):
 Average Score over 100 simulations: 135.47
 10000 epochs:
 Average Score over 100 simulations: 78.75
-Harder (Single):
+Difficult (Single):
 Average Score over 100 simulations: 135.21
-Harder (Multi):
+Difficult (Multi):
 Average Score over 100 simulations: 178.31
 
 ## DeepQLearningLookahead
+
+In this variation of the Deep Q-Learning Algorithm, I tried to get the model to plan ahead, by allocating the reward to the state after the next one. 
 
 ## DeepQLearningLookaheadStates
 
 ## DeepQLearningDifficult
 
-https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequency of more difficult blocks (Z and N) increases the quality of the model significantly. 
+https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequency of more difficult blocks (Z and S) during training raises the quality of the model significantly. To replicate this, I set the spawn probability of the Z and S tetrominos to 20% each, while lowering the rest to 10% each. This approach is supposed to train the model to be more proficient in dealing with difficult situations like "drought", which describes the common phenomenom of having to wait a long time for a I-tetromino to appear. 
+
+## Conclusion
+
+This project showcases the possibility of training a Deep Q-Learning model to play tetris. 
+
+All trained models show a very unexpected inconsistency, sometimes clearing up to 2000 lines, then failing the next run after just 5 lines, even though the same conditions apply. This makes it extremely difficult to compare different models, as the average score can vary greatly when testing the same model multiple times. Tetris consists of an enormous amount of possible states, that can only partially be represented by the simplified 4-dimensional vector chosen in this project. For example, https://www.ideals.illinois.edu/items/118525 uses a much larger feature set, including row/column transitions (number of filled cells adjacent to empty cells), the hole depth (number of filled cells above holes) and the number of rows containing at least one hole. Chen also trains the model for 15000 epochs, as opposed to just 4000 in this project.
 
 ## Sources
 
