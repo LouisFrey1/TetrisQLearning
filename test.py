@@ -12,12 +12,12 @@ def get_args():
     parser = argparse.ArgumentParser(
         """Implementation of Deep Q Network to play Tetris""")
 
-    parser.add_argument("--width", type=int, default=10, help="The common width for all images")
-    parser.add_argument("--height", type=int, default=20, help="The common height for all images")
-    parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
+    parser.add_argument("--width", type=int, default=10, help="Width of the Tetris board")
+    parser.add_argument("--height", type=int, default=20, help="Height of the Tetris board")
     parser.add_argument("--saved_path", type=str, default="trained_models")
     parser.add_argument("--file_name", type=str, default="tetris_final")
     parser.add_argument("--display_board", type=bool, default=False, help="Whether to display the game board while testing")
+    parser.add_argument("--sim_length", type=int, default=100, help="Number of games to simulate")
     args = parser.parse_args()
     return args
 
@@ -85,12 +85,11 @@ def display(tetris):
     
 if __name__ == "__main__":
     opt = get_args()
-    sim_length = 100
     scores = []
-    for i in range(sim_length):
+    for i in range(opt.sim_length):
         score = test(opt)
         if score == -1:
             break
         scores.append(score)
-        print("Simulation: {}/{}: Score {}".format(i+1, sim_length, score))  
-    print("Average Score over {} simulations: {}".format(sim_length, sum(scores)/sim_length))
+        print("Simulation: {}/{}: Score {}".format(i+1, opt.sim_length, score))  
+    print("Average Score over {} simulations: {}".format(opt.sim_length, sum(scores)/opt.sim_length))

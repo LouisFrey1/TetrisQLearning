@@ -19,7 +19,7 @@ def get_args():
         """Implementation of Deep Q Network to play Tetris""")
     parser.add_argument("--width", type=int, default=10, help="The common width for all images")
     parser.add_argument("--height", type=int, default=20, help="The common height for all images")
-    parser.add_argument("--batch_size", type=int, default=512, help="The number of images per batch")
+    parser.add_argument("--batch_size", type=int, default=1024, help="The number of images per batch")
     parser.add_argument("--lr", type=float, default=0.01, help="Learning rate")
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--initial_epsilon", type=float, default=1)
@@ -28,7 +28,7 @@ def get_args():
     parser.add_argument("--num_epochs", type=int, default=4000)
     parser.add_argument("--save_interval", type=int, default=0)
     parser.add_argument("--replay_memory_size", type=int, default=30000,
-                        help="Number of epoches between testing phases")
+                        help="The size of the replay memory buffer")
     parser.add_argument("--saved_path", type=str, default="trained_models")
     parser.add_argument("--file_name", type=str, default="tetris_final")
     parser.add_argument("--display_board", type=bool, default=False, help="Whether to display the game board while training")

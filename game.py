@@ -160,7 +160,7 @@ class Tetris:
         # Simulate all possible rotations
         for i in range(num_rotations):
             valid_xs = self.width - self.tetromino.get_length(i) + 1
-            # Simulate all possible horizontal positions
+            # Simulate all possible positions on x axis
             for x in range(valid_xs):
                 if x + self.tetromino.get_end() > self.width:
                     break
@@ -185,9 +185,9 @@ class Tetris:
             self.go_side(-1)
         self.go_side(x)
         self.go_space()
-        reward = 1 + (self.clearedlines - lines_cleared_old)
+        #reward = 1 + (self.clearedlines - lines_cleared_old)
         #reward = 1 + (self.clearedlines - lines_cleared_old)^2
-        #reward = int((self.clearedlines - lines_cleared_old) > 0) # clearing multiple lines at once still gives reward of 1
+        reward = int((self.clearedlines - lines_cleared_old) > 0) # clearing multiple lines at once still gives reward of 1
         return reward, self.gamestate == "gameover"
     
 
