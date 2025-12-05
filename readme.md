@@ -81,7 +81,7 @@ The only downside of this solution is the much slower performance. While the pre
 ## DeepQLearning
 Train model: 
 ```bash
-py train.py (--lr <learning rate> --gamma <gamma> --num_epochs <number of epochs> --file_name <filename> --display_board <True/False>) --save_interval <save_interval>
+py train.py (--lr <learning rate> --gamma <gamma> --num_epochs <number of epochs> --num_decay_epochs <number of exploration epochs> --file_name <filename> --display_board <True/False> --save_interval <save_interval>)
 ```
 The trained model is saved at trained_models/<filename> (tetris_final by default). An additional model is saved at trained_models/"tetris_<epoch>" every <save_interval> epochs (Disabled by default).
 To view the training progress and compare to other models, use 
@@ -132,6 +132,9 @@ Batch size 1024:
 Average Score over 100 simulations: 384.98
 Batch size 2048:
 Average Score over 100 simulations: 111.56
+
+3000 decay:
+Average Score over 100 simulations: 147.3
 
 Lr 0.02:
 Average Score over 100 simulations: 254.11
