@@ -117,18 +117,8 @@ class Tetris:
         if self.gamestate == "start":
             old_rotation = self.tetromino.rotation
             self.tetromino.rotate()
-            # Try to move tile left and right once to enable rotating at the edge
             if self.intersects():
                 self.tetromino.rotation = old_rotation
-        
-    # Adds current block to field
-    def get_field(self):
-        total_field = np.array(self.field)
-        x = self.tetromino.x
-        y = self.tetromino.y
-        for i in self.tetromino.image():
-            total_field[y+i//4][x+i%4] = 1
-        return total_field
         
     
     def get_holes(self):
@@ -176,29 +166,7 @@ class Tetris:
                 simulated_game.go_space()
                 states[(x, i)] = simulated_game.get_state()
         return states
-    '''
-    def get_next_states_lookahead(self):
-        states = {}
-        num_rotations = len(constants.tetrominos[self.tetromino.type])
-        max_lines = -1
-        max_lines_action = (0,0)
-        for i in range(num_rotations):
-            valid_xs = self.width - self.tetromino.get_length(i) + 1
-            for x in range(valid_xs):
-                if x + self.tetromino.get_end() > self.width:
-                    break
-                simulated_game = copy.deepcopy(self)
-                simulated_game.tetromino.rotation = i
-                for _ in range(5):
-                    simulated_game.go_side(-1)
-                simulated_game.go_side(x)
-                simulated_game.go_space()
-                states[(x, i)] = simulated_game.get_state()
-                if simulated_game.clearedlines > max_lines:
-                    max_lines = simulated_game.clearedlines
-                    max_lines_action = (x, i)
-        return states[max_lines_action]
-    '''
+    
     def step(self, action):
         lines_cleared_old = self.clearedlines
         (x, rotation) = action
@@ -208,8 +176,8 @@ class Tetris:
             self.go_side(-1)
         self.go_side(x)
         self.go_space()
-        reward = self.clearedlines - lines_cleared_old
-        reward = int(reward > 0) # clearing multiple lines at once still gives reward of 1
+        # reward = self.clearedlines - lines_cleared_old
+        reward = int(self.clearedlines - lines_cleared_old > 0) # clearing multiple lines at once still gives reward of 1
         return reward, self.gamestate == "gameover"
     
 

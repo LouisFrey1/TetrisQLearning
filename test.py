@@ -13,7 +13,6 @@ def get_args():
 
     parser.add_argument("--width", type=int, default=10, help="The common width for all images")
     parser.add_argument("--height", type=int, default=20, help="The common height for all images")
-    parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
     parser.add_argument("--saved_path", type=str, default="trained_models")
     parser.add_argument("--file_name", type=str, default="tetris_final")
     parser.add_argument("--display_board", default=False, help="Whether to display the tetris board during the testing process")
