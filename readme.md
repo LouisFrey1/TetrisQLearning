@@ -29,41 +29,41 @@ venv\Scripts\Activate
 pip install -r requirements.txt
 ```
 
-## Base Game
+## Main
 Start game: 
 ```bash
 py simulation.py
 ```
 
-This branch contains the base game of tetris for the user to play themselves. Use the left and right arrow keys to move the tetromino, the up arrow key to rotate and the spacebar to drop the tetromino. To pause the game, press "p"; to leave press ESC.
+This branch contains the base game of tetris for the user to play themselves. Use the left and right arrow keys to move the tetromino, the up arrow key to rotate and the spacebar to drop the tetromino. To pause the game, press "p"; to restart press ESC.
 
 ## Hardcoded
 Start game:
 ```bash
-py simulation.py
+py simulation.py --display_board <True/False> --sim_length <Number of runs to simulate>
 ```
 
-In the simplest version, the best possible action is decided by simulating all possible actions for the current tetromino (all rotations r and placements p), and calculating 4 values:
+In the simplest version of the automated game, the best possible action is decided by simulating all possible actions for the current tetromino (all rotations r and placements p), and calculating 4 values:
 - Total height of all columns (a)
 - Number of lines cleared (b)
 - Number of holes: Empty spaces with tiles above it (c)
 - Bumpiness: Total difference in height between each pair of adjacent columns (d)
-These values are weighted using the numbers found in https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player to calculate a fitness value for each possible action. The action with the heighest fitness value is always taken.
+These values are weighted using the numbers found in https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player to calculate a fitness value for each possible action. The action with the highest fitness value is always taken.
 
 $fitness = -0.510066 \cdot a + 0.760666 \cdot b - 0.35663 \cdot c - 0.184483 \cdot d$
 
 If a move results in a game over, it is assigned a fitness of negative infinity.
 
-Due to its simplicity, this model only considers dropping the tetrominos from the top, and is not capable of moving around obstacles, which makes holes a lot more difficult to deal with. Futhermore, this model does not consider the lookahead piece. This might be the reason why the model in the source can run infinitely, while this one cannot.
+All models in this project only consider dropping the tetrominos from the top, and are not capable of moving around obstacles, which removes a lot of complexity without impacting the game too much. 
 
-This model produces decent results, but does not run infinitely. When the blocks are stacked very high, this solution often prioritizes a low bumpiness instead of reducing the height, usually waiting for a I-Tetromino, while ignoring the threat of game over. When there is no way to immediately clear a line, this model doesn't prepare to clear it in the near future; instead it focuses on not creating holes. Furthermore, it seems too comfortable letting the blocks stack up over the halfway point, allowing holes to form in the process and allowing for a quicker defeat.
+This model produces decent results, but does not run infinitely. When the blocks are stacked very high, this solution often prioritizes a low bumpiness instead of reducing the height, ignoring the threat of game over. When there is no way to immediately clear a line, this model doesn't prepare to clear it in the near future; instead it focuses on not creating holes. This leads to blocks stacking up higher, allowing holes to form in the process anyway and allowing for a quicker defeat.
 
-After running 100 games, the hardcoded model achieved an average of 391.01 lines cleared, with scores ranging between 55 lines cleared and 1674 lines cleared. As these results show, there is a lot of room for improvement.
+After simulating 100 games, the hardcoded model achieved an average of 391.01 lines cleared, with scores ranging between 55 lines cleared and 1674 lines cleared. As these results show, there is a lot of room for improvement.
 
 ## Hardcoded with Lookahead
 Start game: 
 ```bash
-py simulation.py
+py simulation.py --display_board <True/False> --sim_length <Number of runs to simulate>
 ```
 This solution extends the hardcoded version by adding the lookahead piece into the calculation of the best possible move. The fitness of a move is now calculated using the state after 2 moves, instead of just one. This allows the model to think ahead and pull off more complicated maneuvers.
 
@@ -117,8 +117,6 @@ Training:
 
 # Comparing reward functions
 
-# Parameter optimization
-
 Single:
 Average Score over 100 simulations: 225.89
 Multi:
@@ -127,6 +125,9 @@ Quadratic:
 Average Score over 100 simulations: 142.84
 Linear:
 Average Score over 100 simulations: 190.41
+
+
+# Parameter optimization
 
 Batch size 1024:
 Average Score over 100 simulations: 384.98
@@ -161,7 +162,7 @@ https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequ
 
 This project showcases the possibility of training a Deep Q-Learning model to play tetris. 
 
-All trained models show a very unexpected inconsistency, sometimes clearing up to 2000 lines, then failing the next run after just 5 lines, even though the same conditions apply. This makes it extremely difficult to compare different models, as the average score can vary greatly when testing the same model multiple times. Tetris consists of an enormous amount of possible states, that can only partially be represented by the simplified 4-dimensional vector chosen in this project. For example, https://www.ideals.illinois.edu/items/118525 uses a much larger feature set, including row/column transitions (number of filled cells adjacent to empty cells), the hole depth (number of filled cells above holes) and the number of rows containing at least one hole. Chen also trains the model for 15000 epochs, as opposed to just 4000 in this project.
+All trained models show a very unexpected inconsistency, sometimes clearing up to 2000 lines, then failing the next run after just 5 lines, even though the exact same conditions apply. This makes it extremely difficult to compare different models, as the average score can vary greatly when testing the same model multiple times. Tetris consists of an enormous amount of possible states, that can only partially be represented by the simplified 4-dimensional vector chosen in this project. For example, https://www.ideals.illinois.edu/items/118525 uses a much larger feature set, including row/column transitions (number of filled cells adjacent to empty cells), the hole depth (number of filled cells above holes) and the number of rows containing at least one hole. Chen also trains the model for 15000 epochs, as opposed to just 4000 in this project.
 
 ## Sources
 
