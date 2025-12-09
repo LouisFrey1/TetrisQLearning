@@ -4,11 +4,8 @@ WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 
 SIZE = (400, 500)
-FPS = 60
-
-ALPHA = 1
-GAMMA = 1
-EPSILON = 1
+WIDTH = 10
+HEIGHT = 20
 
 HEIGHT_WEIGHT = -0.510066
 LINES_WEIGHT = 0.760666
@@ -23,7 +20,6 @@ colors = [
     (255, 128, 0), # L
     (127, 0, 255), # T
     (255, 255, 0), # O
-    GRAY
 ]
 
 tetrominos = [

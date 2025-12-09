@@ -1,7 +1,8 @@
-import tetromino
-import constants
 import numpy as np
 import copy
+
+import tetromino
+import constants
 
 class Tetris:
     def __init__(self, height, width):
@@ -27,9 +28,7 @@ class Tetris:
         self.next_tetromino = tetromino.Tetromino(3, 0)
         if self.intersects():
             self.state = "gameover"
-        if self.respawn:
-            fitness = self.get_next_states_fitness()
-            self.execute_opt_move(fitness)
+            
 
     def pause(self):
         if self.state == "start":
