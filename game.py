@@ -27,15 +27,7 @@ class Tetris:
         self.tetromino = self.next_tetromino
         self.next_tetromino = tetromino.Tetromino(3, 0)
         if self.intersects():
-            self.state = "gameover"
-            
-
-    def pause(self):
-        if self.state == "start":
-            self.state = "pause"
-        elif self.state == "pause":
-            self.state = "start"
-        
+            self.state = "gameover"        
 
     def intersects(self):
         intersection = False
@@ -80,13 +72,6 @@ class Tetris:
             if self.intersects():
                 self.tetromino.y -= 1
                 self.freeze()
-
-    def go_up(self):
-        if self.state == "start":
-            old_y = self.tetromino.y
-            self.tetromino.y -= 1
-            if self.intersects():
-                self.tetromino.y = old_y
 
     def freeze(self):
         for i in range(4):
@@ -159,7 +144,6 @@ class Tetris:
                 if x + self.tetromino.get_end() > self.width:
                     break
                 simulated_game = copy.deepcopy(self)
-                simulated_game.respawn = False
                 simulated_game.tetromino.rotation = i
                 for _ in range(5):
                     simulated_game.go_side(-1)
@@ -180,7 +164,6 @@ class Tetris:
                 if x + self.tetromino.get_end() > self.width:
                     break
                 simulated_game = copy.deepcopy(self)
-                simulated_game.respawn = False
                 simulated_game.tetromino = copy.deepcopy(self.tetromino)
                 simulated_game.tetromino.rotation = i
                 for _ in range(5):
