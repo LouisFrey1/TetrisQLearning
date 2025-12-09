@@ -1,97 +1,89 @@
 import pygame
 import constants
 import game
+import argparse
 
-def run_game():
-    pygame.display.set_caption("Tetris")
-    screen = pygame.display.set_mode(constants.SIZE)
-    clock = pygame.time.Clock()
-    tetris = game.Tetris(20, 10)
+def get_args():
+    parser = argparse.ArgumentParser("""Implementation of Deep Q Network to play Tetris""")
+    parser.add_argument("--width", type=int, default=10, help="The common width for all images")
+    parser.add_argument("--height", type=int, default=20, help="The common height for all images")
+    parser.add_argument("--display_board", type=bool, default=True, help="Whether to display the game board while training")
+    parser.add_argument("--sim_length", type=int, default=100, help="Number of games to simulate")
+    args = parser.parse_args()
+    return args
 
-    # Loop until the user clicks the close button.
-    done = False
-    counter = 0
-
-    while tetris.state != "gameover" and not done:
+def run_game(opt):
+    tetris = game.Tetris(opt.height, opt.width)
+    if opt.display_board:
+        # Initialize the game engine
+        pygame.init()
+        screen = pygame.display.set_mode(constants.SIZE)
+        pygame.display.set_caption("Tetris")
+    while tetris.state != "gameover":
         if tetris.tetromino is None:
             tetris.new_tetromino()
-        counter += 1
-        if counter > 100000:
-            counter = 0
+        fitness = tetris.get_next_states_fitness()
+        tetris.execute_opt_move(fitness)
         tetris.go_space()
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                if event.key == pygame.K_p:
-                    tetris.pause()
- 
-        screen.fill(constants.WHITE)
-
-        # Draws field
-        for i in range(tetris.height):
-            for j in range(tetris.width):
-                pygame.draw.rect(screen, constants.GRAY, [tetris.x + tetris.zoom * j, tetris.y + tetris.zoom * i, tetris.zoom, tetris.zoom], 1)
-                if tetris.field[i][j] > 0:
-                    pygame.draw.rect(screen, constants.colors[tetris.field[i][j]-1],
-                                    [tetris.x + tetris.zoom * j + 1, tetris.y + tetris.zoom * i + 1, tetris.zoom - 2, tetris.zoom - 1])
-        
-        # Draws current block
-        if tetris.tetromino is not None:
-            for i in range(4):
-                for j in range(4):
-                    p = i * 4 + j
-                    if p in tetris.tetromino.image():
-                        pygame.draw.rect(screen, constants.colors[tetris.tetromino.type],
-                                        [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
-                                        tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
-                                        tetris.zoom - 2, tetris.zoom - 2])
-                        
-        # Draws next block
-        if tetris.next_tetromino is not None:
-            for i in range(4):
-                for j in range(4):
-                    p = i * 4 + j
-                    if p in tetris.next_tetromino.image():
-                        pygame.draw.rect(screen, constants.colors[tetris.next_tetromino.type],
-                                        [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
-                                        tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
-                                        tetris.zoom - 2, tetris.zoom - 2])
-                        pygame.draw.rect(screen, constants.GRAY, 
-                                        [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
-                                        tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
-                                        tetris.zoom - 2, tetris.zoom - 2], 1)
-
-        font = pygame.font.SysFont('Calibri', 25, True, False)
-        linestext = font.render("Lines cleared: " + str(tetris.clearedlines), True, constants.BLACK)
-        font1 = pygame.font.SysFont('Calibri', 65, True, False)
-        text_game_over = font1.render("Game Over", True, (255, 125, 0))
-        text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
-
-        screen.blit(linestext, [0, 0])
-        if tetris.state == "gameover":
-            screen.blit(text_game_over, [20, 200])
-            screen.blit(text_game_over1, [25, 265])
-
-        pygame.display.flip()
-        clock.tick(constants.FPS)    
+        if opt.display_board:
+            display(tetris, screen)
+  
     return tetris.clearedlines
 
-def simulate(sim_length):
-    scores = []
-    # Initialize the game engine
-    pygame.init()
+def display(tetris, screen): 
+    screen.fill(constants.WHITE)
 
-    for game_nr in range(sim_length):
-        score = run_game()
+    # Draws field
+    for i in range(tetris.height):
+        for j in range(tetris.width):
+            pygame.draw.rect(screen, constants.GRAY, [tetris.x + tetris.zoom * j, tetris.y + tetris.zoom * i, tetris.zoom, tetris.zoom], 1)
+            if tetris.field[i][j] > 0:
+                pygame.draw.rect(screen, constants.colors[tetris.field[i][j]-1],
+                                [tetris.x + tetris.zoom * j + 1, tetris.y + tetris.zoom * i + 1, tetris.zoom - 2, tetris.zoom - 1])
+    
+    # Draws current block
+    if tetris.tetromino is not None:
+        for i in range(4):
+            for j in range(4):
+                p = i * 4 + j
+                if p in tetris.tetromino.image():
+                    pygame.draw.rect(screen, constants.colors[tetris.tetromino.type],
+                                    [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
+                                    tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
+                                    tetris.zoom - 2, tetris.zoom - 2])
+                    
+    # Draws next block
+    if tetris.next_tetromino is not None:
+        for i in range(4):
+            for j in range(4):
+                p = i * 4 + j
+                if p in tetris.next_tetromino.image():
+                    pygame.draw.rect(screen, constants.colors[tetris.next_tetromino.type],
+                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
+                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
+                                    tetris.zoom - 2, tetris.zoom - 2])
+                    pygame.draw.rect(screen, constants.GRAY, 
+                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
+                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
+                                    tetris.zoom - 2, tetris.zoom - 2], 1)
+
+    font = pygame.font.SysFont('Calibri', 25, True, False)
+    linestext = font.render("Lines cleared: " + str(tetris.clearedlines), True, constants.BLACK)
+    screen.blit(linestext, [0, 0])
+
+    pygame.display.flip()
+
+if __name__ == "__main__":
+    opt = get_args()
+    scores = []
+
+    for game_nr in range(opt.sim_length):
+        score = run_game(opt)
         scores.append(score)
         print("Game " + str(game_nr+1) + " finished with " + str(score) + " lines cleared.")
 
     print("Average score: " + str(sum(scores)/len(scores)))
     print("Max score: " + str(max(scores)))
     print("Min score: " + str(min(scores)))
-    pygame.quit()
-simulate(100)
+
+

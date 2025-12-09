@@ -10,7 +10,6 @@ class Tetris:
         self.zoom = 20
         self.tetromino = None
         self.next_tetromino = tetromino.Tetromino(3, 0)
-        self.respawn = True
         self.height = height
         self.width = width
         self.field = []
@@ -27,15 +26,6 @@ class Tetris:
         self.next_tetromino = tetromino.Tetromino(3, 0)
         if self.intersects():
             self.state = "gameover"
-        if self.respawn:
-            fitness = self.get_next_states_fitness()
-            self.execute_opt_move(fitness)
-
-    def pause(self):
-        if self.state == "start":
-            self.state = "pause"
-        elif self.state == "pause":
-            self.state = "start"
         
 
     def intersects(self):
@@ -82,13 +72,6 @@ class Tetris:
                 self.tetromino.y -= 1
                 self.freeze()
 
-    def go_up(self):
-        if self.state == "start":
-            old_y = self.tetromino.y
-            self.tetromino.y -= 1
-            if self.intersects():
-                self.tetromino.y = old_y
-
     def freeze(self):
         for i in range(4):
             for j in range(4):
@@ -117,15 +100,6 @@ class Tetris:
             # Try to move tile left and right once to enable rotating at the edge
             if self.intersects():
                 self.tetromino.rotation = old_rotation
-        
-    # Adds current block to field
-    def get_field(self):
-        total_field = np.array(self.field)
-        x = self.tetromino.x
-        y = self.tetromino.y
-        for i in self.tetromino.image():
-            total_field[y+i//4][x+i%4] = 1
-        return total_field
         
 
     def get_holes(self):
@@ -166,7 +140,6 @@ class Tetris:
                 if x + self.tetromino.get_end() > self.width:
                     break
                 simulated_game = copy.deepcopy(self)
-                simulated_game.respawn = False
                 simulated_game.tetromino.rotation = i
                 for _ in range(5):
                     simulated_game.go_left()
@@ -189,7 +162,8 @@ class Tetris:
         self.go_side(x)
 
     def get_fitness(self, state):
-        return constants.HEIGHT_WEIGHT*state[0] + constants.LINES_WEIGHT*state[1] + constants.HOLES_WEIGHT*state[2] + constants.BUMPINESS_WEIGHT*state[3]
+        return constants.HEIGHT_WEIGHT*state[0] + constants.LINES_WEIGHT*state[1] + \
+            constants.HOLES_WEIGHT*state[2] + constants.BUMPINESS_WEIGHT*state[3]
                 
                 
 
