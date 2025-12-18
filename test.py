@@ -16,7 +16,7 @@ def get_args():
     parser.add_argument("--saved_path", type=str, default="trained_models")
     parser.add_argument("--file_name", type=str, default="tetris_final")
     parser.add_argument("--display_board", type=bool, default=False, help="Whether to display the game board while training")
-
+    parser.add_argument("--sim_length", type=int, default=100, help="Number of games to simulate for testing")
 
     args = parser.parse_args()
     return args
@@ -45,14 +45,15 @@ def test(opt):
         if opt.display_board:
             display(env)
 
-        next_steps = env.get_next_states()
-        next_actions, next_states = zip(*next_steps.items())
-        next_states = torch.stack(next_states)
-        if torch.cuda.is_available():
-            next_states = next_states.cuda()
-        predictions = model(next_states)[:, 0]
-        index = torch.argmax(predictions).item()
-        action = next_actions[index]
+        next_steps, lookahead_steps = env.get_next_states()
+
+        for action_key in lookahead_steps.keys():
+            lookahead_state_list = lookahead_steps[action_key]
+            lookahead_states = torch.stack(lookahead_state_list)
+            if torch.cuda.is_available():
+                lookahead_states = lookahead_states.cuda()
+            next_steps[action_key] = torch.max(model(lookahead_states)[:, 0]).item()
+        action = max(next_steps, key=next_steps.get)
         _, done = env.step(action)
 
         if done:
@@ -80,17 +81,29 @@ def display(tetris):
                                     [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2])
+    # Draws next block
+    if tetris.next_tetromino is not None:
+        for i in range(4):
+            for j in range(4):
+                p = i * 4 + j
+                if p in tetris.next_tetromino.image():
+                    pygame.draw.rect(screen, constants.colors[tetris.next_tetromino.type],
+                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
+                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
+                                    tetris.zoom - 2, tetris.zoom - 2])
+                    pygame.draw.rect(screen, constants.GRAY, 
+                                    [constants.SIZE[0]-150 + tetris.zoom * (j + tetris.next_tetromino.x) + 1,
+                                    tetris.y + tetris.zoom * (i + tetris.next_tetromino.y) + 1,
+                                    tetris.zoom - 2, tetris.zoom - 2], 1)
     pygame.display.flip()
-    pygame.time.wait(100)    
     
 if __name__ == "__main__":
     opt = get_args()
-    sim_length = 100
     scores = []
-    for i in range(sim_length):
+    for i in range(opt.sim_length):
         score = test(opt)
         if score == -1:
             break
         scores.append(score)
-        print("Simulation: {}/{}: Score {}".format(i+1, sim_length, score))  
-    print("Average Score over {} simulations: {}".format(sim_length, sum(scores)/sim_length))
+        print("Simulation: {}/{}: Score {}".format(i+1, opt.sim_length, score))  
+    print("Average Score over {} simulations: {}".format(opt.sim_length, sum(scores)/opt.sim_length))

@@ -57,61 +57,48 @@ def train(opt):
     replay_memory = deque(maxlen=opt.replay_memory_size)
     epoch = 0
     while epoch < opt.num_epochs:
-        prev_clearedlines = env.clearedlines
         env.new_tetromino()
         # Draws field
         if opt.display_board:
             display(env)
         next_steps, lookahead_steps = env.get_next_states()
+        next_actions, next_states = zip(*next_steps.items())
+        next_states = torch.stack(next_states)
         # Exploration or exploitation
         epsilon = opt.final_epsilon + (max(opt.num_decay_epochs - epoch, 0) * (
                 opt.initial_epsilon - opt.final_epsilon) / opt.num_decay_epochs)
-        for action_key in next_steps.keys():
-            lookahead_state_list = lookahead_steps[action_key]
-            u = random()
-            random_action = u <= epsilon
-            lookahead_states = torch.stack(lookahead_state_list)
-            if torch.cuda.is_available():
-                lookahead_states = lookahead_states.cuda()
-            model.eval()
-            with torch.no_grad():
-                lookahead_predictions = model(lookahead_states)[:, 0]
-            model.train()
-            if random_action:
-                index = randint(0, len(lookahead_state_list) - 1)
-            else:
-                index = torch.argmax(lookahead_predictions).item()
-            next_steps[action_key] = lookahead_states[index, :]
-            
-        u = random()
-        random_action = u <= epsilon
-        next_actions, next_states = zip(*next_steps.items())
-        next_states = torch.stack(next_states)
-        if torch.cuda.is_available():
-            next_states = next_states.cuda()
-        model.eval()
-        with torch.no_grad():
-            predictions = model(next_states)[:, 0]
-        model.train()
+        
+        random_action = random() <= epsilon
         if random_action:
             index = randint(0, len(next_steps) - 1)
         else:
+            # The Q-value for each action is set to the maximum Q-value from lookahead states
+            model.eval()
+            for action_key in next_steps.keys():
+                lookahead_state_list = lookahead_steps[action_key]
+                lookahead_states = torch.stack(lookahead_state_list)
+                if torch.cuda.is_available():
+                    lookahead_states = lookahead_states.cuda()
+                with torch.no_grad():
+                    lookahead_predictions = model(lookahead_states)[:, 0]
+                lookahead_index = torch.argmax(lookahead_predictions).item()
+                next_steps[action_key] = lookahead_states[lookahead_index, :]
+                
+            if torch.cuda.is_available():
+                next_states = next_states.cuda()
+            with torch.no_grad():
+                predictions = model(next_states)[:, 0]
             index = torch.argmax(predictions).item()
+        model.train()
 
         next_state = next_states[index, :]
         action = next_actions[index]
 
-        _, done = env.step(action)
-        reward = env.clearedlines - prev_clearedlines
-
-        if torch.cuda.is_available():
-            next_state = next_state.cuda()
+        reward, done = env.step(action)
         replay_memory.append([state, reward, next_state, done])
         if done or env.clearedlines >= 5000:
             final_cleared_lines = env.clearedlines
             state = env.reset()
-            if torch.cuda.is_available():
-                state = state.cuda()
         else:
             state = next_state
             continue
