@@ -76,7 +76,7 @@ After reaching 100.000 lines cleared, it is safe to assume that this solution al
 ![Tetris Screenshot](images/Screenshot4.png)
 
 
-The only downside of this solution is the much slower performance. While the previous model only had to simulate $p \cdot r (#possible positions \cdot #possible rotations)$ possible actions, this version has to simulate $p_1 \cdot r_1 \cdot p_2 \cdot r_2$ possible actions. If $p_1=p_2=p=8$ and $r_1=r_2=r=4$, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
+The only downside of this solution is the much slower performance. While the previous model only had to simulate $p \cdot r (possible positions \cdot possible rotations)$ possible actions, this version has to simulate $p_1 \cdot r_1 \cdot p_2 \cdot r_2$ possible actions. If $p_1=p_2=p=8$ and $r_1=r_2=r=4$, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
 
 ## DeepQLearning
 Train model: 
@@ -153,6 +153,8 @@ Average Score over 100 simulations: 178.31
 In this variation of the Deep Q-Learning Algorithm, I tried to get the model to plan ahead, by allocating the reward to the state after the next one. 
 
 ## DeepQLearningLookaheadStates
+
+This variation of the Deep Q-Learning algorithm functions similar to the "Hardcoded with Lookahead" branch. For each tetromino, every possible state after both the current, and the lookahead piece have been played, is compared using the Deep Q-Network. The action that leads to the best possible state after two steps is chosen. Just like with the Hardcoded with Lookahead branch, this variation is a lot slower than the one without lookahead piece, since a lot more states have to be considered in each step. As Figure 7 shows, the training process had to be cancelled at 3500 epochs after over a day, while the previous version only took 3 hours for 4000 epochs. Even then, it is clear that the results are much worse. 
 
 ## DeepQLearningDifficult
 
