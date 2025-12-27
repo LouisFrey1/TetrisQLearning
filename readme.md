@@ -109,22 +109,17 @@ Training:
 * If the random action is not taken, the deep Q-Network is used to calculate the action that maximizes the fitness of the next state.
 * After an action is chosen, the previous state, the current state and the reward is added to the replay memory.
 * There are multiple options for the reward function:
-  - Quadratic: 1 + #lines cleared^2;
-  - Linear: 1 + #lines cleared;
+  - Quadratic: $1 + lines cleared^2$;
+  - Linear: $1 + lines cleared$;
   - Single: 1, if at least 1 line was cleared.
 * The first 2 options promote a more risky playstyle that involves leaving a column at the edge, while waiting to clear as many lines as possible with a single I-tetromino, while the last option prioritizes clearing lines whenever possible.
 * After each epoch, a batch of 1024 samples is taken from the replay memory and used to update the weights of the model.
 
 # Comparing reward functions
 
-Single:
-Average Score over 100 simulations: 225.89
-Multi:
-Average Score over 100 simulations: 155.27
-Quadratic:
-Average Score over 100 simulations: 142.84
-Linear:
-Average Score over 100 simulations: 190.41
+In a first step of optimization, I had to choose an appropriate reward function. The obvious first choice would be to use the standard tetris score of $1 + lines cleared^2$ (quadratic), but https://www.ideals.illinois.edu/items/118525 shows that a linear function of $1 + lines cleared$ (linear) improves results by prioritizing surviving longer over risking a game over to achieve more points at once. These results could be replicated: Testing both models over 100 runs, the linear approach achieved an average of 190.41 lines cleared, while the quadratic formula achieved only an average of 142.84 lines. However, a different approach that rewards 1, if any lines were cleared and 0 otherwise, outperformed both, clearing an average of 225.89 lines over 100 games. This promotes an even safer approach, discouraging the model from ever attempting to clear multiple lines at once. Figure 5 shows the training process of the different variations. During the training process using the quadratic reward funtion, 
+
+![Tetris Screenshot](images/Screenshot5.png)
 
 
 # Parameter optimization
@@ -154,7 +149,15 @@ In this variation of the Deep Q-Learning Algorithm, I tried to get the model to 
 
 ## DeepQLearningLookaheadStates
 
-This variation of the Deep Q-Learning algorithm functions similar to the "Hardcoded with Lookahead" branch. For each tetromino, every possible state after both the current, and the lookahead piece have been played, is compared using the Deep Q-Network. The action that leads to the best possible state after two steps is chosen. Just like with the Hardcoded with Lookahead branch, this variation is a lot slower than the one without lookahead piece, since a lot more states have to be considered in each step. As Figure 7 shows, the training process had to be cancelled at 3500 epochs after over a day, while the previous version only took 3 hours for 4000 epochs. Even then, it is clear that the results are much worse. 
+This variation of the Deep Q-Learning algorithm functions similar to the "Hardcoded with Lookahead" branch. For each tetromino, every possible state after both the current, and the lookahead piece have been played, is compared using the Deep Q-Network. The action that leads to the best possible state after two steps is chosen. Just like with the Hardcoded with Lookahead branch, this variation is a lot slower than the one without lookahead piece, since a lot more states have to be considered in each step. As Figure 7 shows, the training process had to be cancelled at 3500 epochs after over a day, while the previous version only took 3 hours for 4000 epochs. Even then, the results are clearly much worse. 
+
+![Tetris Screenshot](images/Screenshot7.png)
+
+However, when testing the new model using the display_board flag, you can see an entirely different playstyle from the standard model. While still performing a lot worse overall (81.17 lines cleared on average), the algorithm uses more advanced set-ups to clear lines by anticipating the next possible move. Figure XXXXX shows the board in the middle of such a technique. The blue J-tetromino was placed in a suboptimal position (creating 2 holes and not clearing any lines), because the lookahead piece showed a I-tetromino, which is able to clear the line and eliminate the holes. 
+
+![Tetris Screenshot](images/Screenshot6.png)
+
+With better hardware, allowing for longer training and more optimization, I believe this approach to have the potential to outperform the standard model, similar to its hardcoded counterpart. 
 
 ## DeepQLearningDifficult
 
