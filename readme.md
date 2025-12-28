@@ -163,6 +163,9 @@ With better hardware, allowing for longer training and more optimization, I beli
 
 https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequency of more difficult blocks (Z and S) during training raises the quality of the model significantly. To replicate this, I set the spawn probability of the Z and S tetrominos to 20% each, while lowering the rest to 10% each. This approach is supposed to train the model to be more proficient in dealing with difficult situations like "drought", which describes the common phenomenom of having to wait a long time for a I-tetromino to appear. 
 
+![Tetris Screenshot](images/Screenshot8.png)
+
+
 ## Conclusion
 
 This project showcases the possibility of training a Deep Q-Learning model to play tetris. 
