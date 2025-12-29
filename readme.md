@@ -9,7 +9,6 @@ A project implementing Q-Learning for the game Tetris.
 - [Hardcoded](#hardcoded)
 - [Hardcoded with Lookahead](#hardcodedwithlookahead)
 - [DeepQLearning](#deepqlearning)
-- [DeepQLearningLookahead](#deepqlearninglookahead)
 - [DeepQLearningLookaheadStates](#deepqlearninglookaheadstates)
 - [DeepQLearningDifficult](#deepqlearningdifficult)
 - [Sources](#sources)
@@ -76,7 +75,7 @@ After reaching 100.000 lines cleared, it is safe to assume that this solution al
 ![Tetris Screenshot](images/Screenshot4.png)
 
 
-The only downside of this solution is the much slower performance. While the previous model only had to simulate $p \cdot r (possible positions \cdot possible rotations)$ possible actions, this version has to simulate $p_1 \cdot r_1 \cdot p_2 \cdot r_2$ possible actions. If $p_1=p_2=p=8$ and $r_1=r_2=r=4$, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
+The only downside of this solution is the much slower performance. While the previous model only had to simulate $p \cdot r (\text{possible positions} \cdot \text{possible rotations})$ possible actions, this version has to simulate $p_1 \cdot r_1 \cdot p_2 \cdot r_2$ possible actions. If $p_1=p_2=p=8$ and $r_1=r_2=r=4$, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
 
 ## DeepQLearning
 Train model: 
@@ -117,13 +116,33 @@ Training:
 
 # Comparing reward functions
 
-In a first step of optimization, I had to choose an appropriate reward function. The obvious first choice would be to use the standard tetris score of $1 + lines cleared^2$ (quadratic), but https://www.ideals.illinois.edu/items/118525 shows that a linear function of $1 + lines cleared$ (linear) improves results by prioritizing surviving longer over risking a game over to achieve more points at once. These results could be replicated: Testing both models over 100 runs, the linear approach achieved an average of 190.41 lines cleared, while the quadratic formula achieved only an average of 142.84 lines. However, a different approach that rewards 1, if any lines were cleared and 0 otherwise, outperformed both, clearing an average of 225.89 lines over 100 games. This promotes an even safer approach, discouraging the model from ever attempting to clear multiple lines at once. Figure 5 shows the training process of the different variations. During the training process using the quadratic reward funtion, 
+In a first step of optimization, I had to choose an appropriate reward function. The obvious first choice would be to use the standard tetris score of $1 + lines cleared^2$ (quadratic), but https://www.ideals.illinois.edu/items/118525 shows that a linear function of $1 + lines cleared$ (linear) improves results by prioritizing surviving longer over risking a game over to achieve more points at once. These results could be replicated: Testing both models over 100 runs, the linear approach achieved an average of 190.41 lines cleared, while the quadratic formula achieved only an average of 142.84 lines. However, a different approach that rewards 1, if any lines were cleared and 0 otherwise, outperformed both, clearing an average of 225.89 lines over 100 games. This promotes an even safer approach, discouraging the model from ever attempting to clear multiple lines at once. The following graph shows the training process of the different variations. During training, the model using the quadratic reward function had a few runs with incredibly high scores, as seen by the spikes at around 2200, 2600 and 3000 epochs, clearing up to 3100 lines. However, apart from these outliers, the model performed a lot worse than others.
 
 ![Tetris Screenshot](images/Screenshot5.png)
+
+Reward function | quadratic | linear | single 
+--- | --- | --- | --- 
+Lines cleared | 142.84 | 190.41 | 225.89 
+
+Parameters: 
+* Batch size = 512
+* Learning rate = 0.01
+* Gamma = 0.99
+* Decay epochs = 2000
 
 
 # Parameter optimization
 
+In the next step, the most relevant parameters are further optimized. The biggest improvement was a result of doubling the batch size to 1024, so that more samples are used for training in each epoch. However, this improvement was not visible during training. The following graph shows the model with batch size 512 outperforming the one with batch size 1024 by almost 50 points. The difference only became clear during testing, when the new model achieved an average of 384.98 lines cleared; a lot more that the previous 225.89. However, further increasing the batch size to 2048 had an adverse effect, with an average of 111.56 lines cleared.
+
+![Tetris Screenshot](images/Screenshot9.png)
+
+Batch size | 512 | 1024 | 2048 
+--- | --- | --- | --- 
+Lines cleared | 225.89 | 384.98 | 111.56 
+
+Batch size 512: 
+225.89
 Batch size 1024:
 Average Score over 100 simulations: 384.98
 Batch size 2048:
@@ -136,16 +155,7 @@ Lr 0.02:
 Average Score over 100 simulations: 254.11
 Single (lr 0.001):
 Average Score over 100 simulations: 135.47
-10000 epochs:
-Average Score over 100 simulations: 78.75
-Difficult (Single):
-Average Score over 100 simulations: 135.21
-Difficult (Multi):
-Average Score over 100 simulations: 178.31
 
-## DeepQLearningLookahead
-
-In this variation of the Deep Q-Learning Algorithm, I tried to get the model to plan ahead, by allocating the reward to the state after the next one. 
 
 ## DeepQLearningLookaheadStates
 
@@ -160,6 +170,11 @@ However, when testing the new model using the display_board flag, you can see an
 With better hardware, allowing for longer training and more optimization, I believe this approach to have the potential to outperform the standard model, similar to its hardcoded counterpart. 
 
 ## DeepQLearningDifficult
+
+Difficult (Single):
+Average Score over 100 simulations: 135.21
+Difficult (Multi):
+Average Score over 100 simulations: 178.31
 
 https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequency of more difficult blocks (Z and S) during training raises the quality of the model significantly. To replicate this, I set the spawn probability of the Z and S tetrominos to 20% each, while lowering the rest to 10% each. This approach is supposed to train the model to be more proficient in dealing with difficult situations like "drought", which describes the common phenomenom of having to wait a long time for a I-tetromino to appear. 
 
