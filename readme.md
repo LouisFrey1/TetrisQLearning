@@ -152,9 +152,9 @@ Lines cleared | 212.34 | 324.68 | 109.57
 
 Further experiments, like increasing the duration of the exploration phase to 3000 epochs, increasing the number of hidden layers or varying the learning rate only decreased the average score.
 
-Learning rate | 0.001 | 0.01 | 0.02 
+Learning rate | 0.005 | 0.01 | 0.02 
 --- | --- | --- | --- 
-Lines cleared | 135.47 | 324.68 | 262.39
+Lines cleared | 221.97 | 324.68 | 262.39
 
 Number of exploration epochs | 2000 | 3000 
 --- | --- | ---
