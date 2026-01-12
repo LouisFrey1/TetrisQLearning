@@ -40,19 +40,13 @@ def get_args():
 
 
 def train(opt):
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(123)
-    else:
-        torch.manual_seed(123)
+    torch.manual_seed(123)
     writer = SummaryWriter()
     env = Tetris(height=opt.height, width=opt.width)
     model = DeepQNetwork()
     optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr)
     criterion = nn.MSELoss()
     state = env.reset()
-    if torch.cuda.is_available():
-        model.cuda()
-        state = state.cuda()
 
     replay_memory = deque(maxlen=opt.replay_memory_size)
     epoch = 0
@@ -77,15 +71,10 @@ def train(opt):
             for action_key in next_steps.keys():
                 lookahead_state_list = lookahead_steps[action_key]
                 lookahead_states = torch.stack(lookahead_state_list)
-                if torch.cuda.is_available():
-                    lookahead_states = lookahead_states.cuda()
                 with torch.no_grad():
                     lookahead_predictions = model(lookahead_states)[:, 0]
                 lookahead_index = torch.argmax(lookahead_predictions).item()
                 next_steps[action_key] = lookahead_states[lookahead_index, :]
-                
-            if torch.cuda.is_available():
-                next_states = next_states.cuda()
             with torch.no_grad():
                 predictions = model(next_states)[:, 0]
             index = torch.argmax(predictions).item()
@@ -110,11 +99,6 @@ def train(opt):
         state_batch = torch.stack(tuple(state for state in state_batch))
         reward_batch = torch.from_numpy(np.array(reward_batch, dtype=np.float32)[:, None])
         next_state_batch = torch.stack(tuple(state for state in next_state_batch))
-
-        if torch.cuda.is_available():
-            state_batch = state_batch.cuda()
-            reward_batch = reward_batch.cuda()
-            next_state_batch = next_state_batch.cuda()
 
         q_values = model(state_batch)
         model.eval()

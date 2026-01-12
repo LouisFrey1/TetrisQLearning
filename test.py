@@ -3,6 +3,7 @@ import argparse
 import torch
 import pygame
 import os.path
+import random
 import constants
 from game import Tetris
 from DeepQNetwork import DeepQNetwork
@@ -26,20 +27,9 @@ def test(opt):
     if os.path.isfile("{}/{}".format(opt.saved_path, opt.file_name))==False:
         print("No trained model with this name found")
         return -1
-    torch.serialization.add_safe_globals([torch.nn.modules.container.Sequential])
-    torch.serialization.safe_globals([DeepQNetwork])
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(123)
-    else:
-        torch.manual_seed(123)
-    if torch.cuda.is_available():
-        model = torch.load("{}/{}}".format(opt.saved_path, opt.file_name))
-    else:
-        model = torch.load("{}/{}".format(opt.saved_path, opt.file_name), weights_only=False, map_location=lambda storage, loc: storage)
+    model = torch.load("{}/{}".format(opt.saved_path, opt.file_name), weights_only=False, map_location=lambda storage, loc: storage)
     model.eval()
     env = Tetris(width=opt.width, height=opt.height)
-    if torch.cuda.is_available():
-        model.cuda()
     while True:
         env.new_tetromino()
         if opt.display_board:
@@ -50,8 +40,6 @@ def test(opt):
         for action_key in lookahead_steps.keys():
             lookahead_state_list = lookahead_steps[action_key]
             lookahead_states = torch.stack(lookahead_state_list)
-            if torch.cuda.is_available():
-                lookahead_states = lookahead_states.cuda()
             next_steps[action_key] = torch.max(model(lookahead_states)[:, 0]).item()
         action = max(next_steps, key=next_steps.get)
         _, done = env.step(action)
@@ -100,6 +88,8 @@ def display(tetris):
 if __name__ == "__main__":
     opt = get_args()
     scores = []
+    # Set random seed for reproducibility
+    random.seed(123)
     for i in range(opt.sim_length):
         score = test(opt)
         if score == -1:
