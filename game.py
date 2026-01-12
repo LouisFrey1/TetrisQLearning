@@ -187,7 +187,7 @@ class Tetris:
         self.go_space()
         #reward = 1 + (self.clearedlines - lines_cleared_old)
         #reward = 1 + (self.clearedlines - lines_cleared_old)^2
-        reward = int((self.clearedlines - lines_cleared_old) > 0) # clearing multiple lines at once still gives reward of 1
+        reward = int((self.clearedlines - lines_cleared_old) > 0) # clearing any lines gives a reward of 1
         return reward, self.gamestate == "gameover"
     
 

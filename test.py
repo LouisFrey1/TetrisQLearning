@@ -4,6 +4,7 @@ import os.path
 import torch
 import pygame
 import constants
+import random
 from game import Tetris
 from DeepQNetwork import DeepQNetwork
 
@@ -26,20 +27,10 @@ def test(opt):
     if os.path.isfile("{}/{}".format(opt.saved_path, opt.file_name)) is False:
         print("No trained model with this name found!")
         return -1
-    torch.serialization.add_safe_globals([torch.nn.modules.container.Sequential])
-    torch.serialization.safe_globals([DeepQNetwork])
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(123)
-    else:
-        torch.manual_seed(123)
-    if torch.cuda.is_available():
-        model = torch.load("{}/{}}".format(opt.saved_path, opt.file_name))
-    else:
-        model = torch.load("{}/{}".format(opt.saved_path, opt.file_name), weights_only=False, map_location=lambda storage, loc: storage)
+    # Load the trained model from file
+    model = torch.load("{}/{}".format(opt.saved_path, opt.file_name), weights_only=False, map_location=lambda storage, loc: storage)
     model.eval()
     env = Tetris(width=opt.width, height=opt.height)
-    if torch.cuda.is_available():
-        model.cuda()
     while True:
         env.new_tetromino()
         if opt.display_board:
@@ -48,8 +39,6 @@ def test(opt):
         next_steps = env.get_next_states()
         next_actions, next_states = zip(*next_steps.items())
         next_states = torch.stack(next_states)
-        if torch.cuda.is_available():
-            next_states = next_states.cuda()
         predictions = model(next_states)[:, 0]
         index = torch.argmax(predictions).item()
         action = next_actions[index]
@@ -63,6 +52,7 @@ def display(tetris):
     pygame.display.set_caption("Tetris")
     screen = pygame.display.set_mode(constants.SIZE)
     screen.fill(constants.WHITE)
+    # Draws board
     for i in range(tetris.height):
         for j in range(tetris.width):
             pygame.draw.rect(screen, constants.GRAY, [tetris.x + tetris.zoom * j, tetris.y + tetris.zoom * i, tetris.zoom, tetris.zoom], 1)
@@ -80,12 +70,13 @@ def display(tetris):
                                     [tetris.x + tetris.zoom * (j + tetris.tetromino.x) + 1,
                                     tetris.y + tetris.zoom * (i + tetris.tetromino.y) + 1,
                                     tetris.zoom - 2, tetris.zoom - 2])
-    pygame.display.flip()
-    pygame.time.wait(100)    
+    pygame.display.flip()  
     
 if __name__ == "__main__":
     opt = get_args()
     scores = []
+    # Set random seed for reproducibility
+    random.seed(123)
     for i in range(opt.sim_length):
         score = test(opt)
         if score == -1:
