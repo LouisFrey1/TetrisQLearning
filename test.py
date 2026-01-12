@@ -3,6 +3,7 @@ import argparse
 import torch
 import pygame
 import os.path
+import random
 import constants
 from game import Tetris
 from DeepQNetwork import DeepQNetwork
@@ -25,21 +26,10 @@ def test(opt):
     if os.path.isfile("{}/{}".format(opt.saved_path, opt.file_name)) == False:
         print("Model file not found!")
         return -1
-        
-    torch.serialization.add_safe_globals([torch.nn.modules.container.Sequential])
-    torch.serialization.safe_globals([DeepQNetwork])
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(123)
-    else:
-        torch.manual_seed(123)
-    if torch.cuda.is_available():
-        model = torch.load("{}/{}}".format(opt.saved_path, opt.file_name))
-    else:
-        model = torch.load("{}/{}".format(opt.saved_path, opt.file_name), weights_only=False, map_location=lambda storage, loc: storage)
+    torch.manual_seed(123)
+    model = torch.load("{}/{}".format(opt.saved_path, opt.file_name), weights_only=False, map_location=lambda storage, loc: storage)
     model.eval()
     env = Tetris(width=opt.width, height=opt.height)
-    if torch.cuda.is_available():
-        model.cuda()
     while True:
         env.new_tetromino()
         if opt.display_board:
@@ -48,8 +38,6 @@ def test(opt):
         next_steps = env.get_next_states()
         next_actions, next_states = zip(*next_steps.items())
         next_states = torch.stack(next_states)
-        if torch.cuda.is_available():
-            next_states = next_states.cuda()
         predictions = model(next_states)[:, 0]
         index = torch.argmax(predictions).item()
         action = next_actions[index]
@@ -87,6 +75,7 @@ if __name__ == "__main__":
     opt = get_args()
     sim_length = 100
     scores = []
+    random.seed(123)
     for i in range(sim_length):        
         score = test(opt)
         if score == -1:
