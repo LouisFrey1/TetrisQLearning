@@ -6,6 +6,7 @@ A project implementing Q-Learning for the game Tetris.
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Main] (#main)
 - [Hardcoded](#hardcoded)
 - [Hardcoded with Lookahead](#hardcodedwithlookahead)
 - [DeepQLearning](#deepqlearning)
@@ -184,7 +185,7 @@ Training:
 
 Testing:
 
-Model | Regular | With Lookahead
+Model | Without Lookahead | With Lookahead
 --- | --- | ---
 Lines cleared | 324.68 | 81.17
 
