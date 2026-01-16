@@ -6,7 +6,7 @@ A project implementing Q-Learning for the game Tetris.
 
 - [Overview](#overview)
 - [Installation](#installation)
-- [Main] (#main)
+- [Main](#main)
 - [Hardcoded](#hardcoded)
 - [Hardcoded with Lookahead](#hardcodedwithlookahead)
 - [DeepQLearning](#deepqlearning)
