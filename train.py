@@ -105,10 +105,14 @@ def train(opt):
         y_batch = torch.cat(
             tuple(reward if done else reward + opt.gamma * prediction for reward, done, prediction in
                   zip(reward_batch, done_batch, next_prediction_batch)))[:, None]
-
+        
+        # Reset gradients
         optimizer.zero_grad()
+        # Compute loss between Q-Values and reward targets
         loss = criterion(q_values, y_batch)
+        # Backpropagate loss
         loss.backward()
+        # Update weights
         optimizer.step()
 
         print("Epoch: {}/{}, Cleared lines: {}".format(
