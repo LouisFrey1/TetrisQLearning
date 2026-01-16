@@ -78,6 +78,9 @@ After reaching 100.000 lines cleared, it is safe to assume that this solution al
 The only downside of this solution is the much slower performance. While the previous model only had to simulate $p \cdot r (\text{possible positions} \cdot \text{possible rotations})$ possible actions, this version has to simulate $p_1 \cdot r_1 \cdot p_2 \cdot r_2$ possible actions. If $p_1=p_2=p=8$ and $r_1=r_2=r=4$, this results in 1024 simulations instead of 32. Clearing 100 lines took this model 28.89 seconds, while the previous one achieved the same in only 4.53 seconds.
 
 ## DeepQLearning
+
+In this branch, I created a Deep Q-Learning Network, that takes a 4-dimensional vector containing the state (height, lines cleared, bumpiness, number of holes) as input and returns a fitness value for the given state, using a hidden layer with 64 units. The weights are initialized using the xavier uniform function. Over the course of 4000 epochs, this model is trained using Deep Q-Learning, adjusting the weights to clear as many lines as possible. 
+
 Train model: 
 ```bash
 py train.py (--lr <learning rate> --gamma <gamma> --num_epochs <number of epochs> --num_decay_epochs <number of exploration epochs> --file_name <filename> --display_board <True/False> --save_interval <save_interval>)
@@ -95,7 +98,6 @@ Activate display_board to show the board during training/testing. False by defau
 
 The function get_args() in train.py and test.py shows additional optional parameters.
 
-In this branch, I created a Deep Q-Learning Network, that takes a 4-dimensional vector containing the state (height, lines cleared, bumpiness, number of holes) as input and returns a fitness value for the given state, using a hidden layer with 64 units. The weights are initialized using the xavier uniform function.
 
 Training:
 
@@ -127,24 +129,31 @@ Testing:
 
 In a first step of optimization, I had to choose an appropriate reward function. The obvious first choice would be to use the standard tetris score of $1 + lines cleared^2$ (quadratic), but https://www.ideals.illinois.edu/items/118525 shows that a linear function of $1 + lines cleared$ (linear) improves results by prioritizing surviving longer over risking a game over to achieve more points at once. These results could be replicated: Testing both models over 100 runs, the linear approach achieved an average of 134.26 lines cleared, while the quadratic formula achieved only an average of 121.29 lines. However, a different approach that rewards 1, if any lines were cleared and 0 otherwise, outperformed both, clearing an average of 212.34 lines over 100 games. This promotes an even safer approach, discouraging the model from ever attempting to clear multiple lines at once. The following graph shows the training process of the different variations. During training, the model using the quadratic reward function had a few runs with incredibly high scores, as seen by the spikes at around 2200, 2600 and 3000 epochs, clearing up to 3100 lines. However, apart from these outliers, the model performed a lot worse than others.
 
+Training with parameters: 
+* Batch size = 512
+* Learning rate = 0.01
+* Gamma = 0.99
+* Decay epochs = 2000
+  
 ![Tetris Screenshot](images/Screenshot5.png)
+
+Testing:
 
 Reward function | quadratic | linear | single 
 --- | --- | --- | --- 
 Lines cleared | 121.29 | 134.26 | 212.34
 
-Training Parameters: 
-* Batch size = 512
-* Learning rate = 0.01
-* Gamma = 0.99
-* Decay epochs = 2000
 
 
 # Parameter optimization
 
 In the next step, the most relevant parameters are further optimized. The biggest improvement was a result of doubling the batch size to 1024, so that more samples are used for training in each epoch. However, this improvement was not visible during training; the following graph shows the model with batch size 512 outperforming the one with batch size 1024 by almost 50 points. The difference only became clear during testing, when the new model achieved an average of 324.68 lines cleared; a lot more that the previous 212.34. It is not entirely clear why the better model performed so much worse during training, as the conditions during training and testing are very similar; the only difference being the 0.1% chance of exploration, which should be negligable. Further increasing the batch size to 2048 had an adverse effect, with an average of only 109.57 lines cleared.
 
+Training: 
+
 ![Tetris Screenshot](images/Screenshot9.png)
+
+Testing:
 
 Batch size | 512 | 1024 | 2048 
 --- | --- | --- | --- 
@@ -169,25 +178,36 @@ Lines cleared | 324.68 | 184.59
 
 This variation of the Deep Q-Learning algorithm functions similar to the "Hardcoded with Lookahead" branch: For each tetromino, every possible state after both the current, and the lookahead piece have been played, is compared using the Deep Q-Network. The action that leads to the best possible state after two steps is chosen. Just like with the Hardcoded with Lookahead branch, this variation is a lot slower than the one without lookahead piece, since a lot more states have to be considered in each step. As Figure 7 shows, the training process had to be cancelled at 3500 epochs after over a day, while the previous version only took 3 hours for 4000 epochs. However, even when compared to the previous model at 3500 epochs, the results are clearly much worse. 
 
+Training:
+
 ![Tetris Screenshot](images/Screenshot7.png)
 
-However, when testing the new model using the display_board flag, you can see an entirely different playstyle from the standard model. While still performing a lot worse overall (81.17 lines cleared on average), the algorithm uses more advanced set-ups to clear lines by anticipating the next possible move. The following screenshot shows the board in the middle of such a technique. The blue J-tetromino was placed in a suboptimal position (creating 2 holes and not clearing any lines), because the lookahead piece showed a I-tetromino, which is able to clear the line and eliminate the holes. 
+Testing:
+
+ | Regular | With Lookahead
+--- | --- | ---
+Lines cleared | 324.68 | 81.17
+
+However, when testing the new model using the display_board flag, you can see an entirely different playstyle from the standard model. Despite performing a lot worse overall, the algorithm uses interesting, more advanced set-ups to clear lines by anticipating the next possible move. The following screenshot shows the board in the middle of such a technique. The blue J-tetromino was placed in a suboptimal position (creating 2 holes and not clearing any lines), because the lookahead piece showed a I-tetromino, which is able to clear the line and eliminate the holes. 
 
 ![Tetris Screenshot](images/Screenshot6.png)
 
-With better hardware, allowing for longer training and more optimization, I believe this approach could have the potential to outperform the standard model, similar to its hardcoded counterpart. 
+With better hardware, allowing for longer training and more optimization, I believe this approach could have the potential to outperform the standard model, similar to its hardcoded counterpart. However, the performance of this model leaves a lot to be desired, as it took several hours just to test the model for 100 runs, even though the scores were lower. With better scores, it would take even longer.
 
 ## DeepQLearningDifficult
 
-https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequency of more difficult blocks (Z and S) during training raises the quality of the model significantly. To replicate this, I set the spawn probability of the Z and S tetrominos to 20% each, while lowering the rest to 10% each. This approach is supposed to train the model to be more proficient in dealing with difficult situations like "drought", which describes the common phenomenon of having to wait a long time for a I-tetromino to appear. 
+https://www.ideals.illinois.edu/items/118525 suggests, that increasing the frequency of more difficult blocks (Z and S) during training raises the quality of the model significantly, almost doubling the score. To replicate this, I set the spawn probability of the Z and S tetrominos to 25% each, while lowering the rest to 10% each. This approach is supposed to train the model to be more proficient in dealing with difficult situations like "drought", which describes the common phenomenon of having to wait a long time for a I-tetromino to appear. 
+
+Training:
 
 ![Tetris Screenshot](images/Screenshot8.png)
+Testing:
 
  | Normal | Difficult 
 --- | --- | ---
 Lines cleared | 324.68 | 135.21
 
-As the graph of the training process, as well as the table of the tests show, this variation of the Deep Q-Learning algorithm scored a lot worse than the default. The much lower training time of 43 minutes is a result of the much lower scores, not of an improved performance.
+As the graph of the training process, as well as the table of the tests show, this variation of the Deep Q-Learning algorithm scored a lot worse than the default. The much lower training time of 43 minutes is a result of the much lower scores, not of an improved performance. A possible explanation for the differing outcome compared to the source, is the much lower training time (4000 instead of 15000 epochs), as well as the reduced feature set.
 
 
 ## Conclusion
