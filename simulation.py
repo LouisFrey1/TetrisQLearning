@@ -9,7 +9,7 @@ def get_args():
     parser.add_argument("--width", type=int, default=10, help="The common width for all images")
     parser.add_argument("--height", type=int, default=20, help="The common height for all images")
     parser.add_argument("--display_board", type=bool, default=True, help="Whether to display the game board while training")
-    parser.add_argument("--sim_length", type=int, default=100, help="Number of games to simulate")
+    parser.add_argument("--sim_length", type=int, default=1, help="Number of games to simulate")
     args = parser.parse_args()
     return args
 

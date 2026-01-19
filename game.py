@@ -118,6 +118,7 @@ class Tetris:
                 i += 1
         return holes
 
+    # Bumpiness is the sum of the differences of heights between adjacent columns
     def get_bumpiness(self):
         column_heights = np.zeros(self.width)
         for j in range(self.width):
@@ -135,6 +136,7 @@ class Tetris:
         bumpiness, height = self.get_bumpiness()
         return holes, bumpiness, height
     
+    # Simulates all possible next states and returns their fitness values
     def get_next_states_fitness(self):
         fitness = {}
         num_rotations = len(constants.tetrominos[self.tetromino.type])
@@ -155,6 +157,7 @@ class Tetris:
                     fitness[(x, i)] = simulated_game.get_lookahead_states_fitness()
         return fitness
     
+    # Simulates all possible next states after the current move and returns the max fitness value for each
     def get_lookahead_states_fitness(self):
         fitness = {}
         num_rotations = len(constants.tetrominos[self.tetromino.type])
