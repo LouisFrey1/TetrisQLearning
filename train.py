@@ -1,12 +1,10 @@
 import argparse
 import os
-import shutil
 from random import random, randint, sample
 
 import numpy as np
 import torch
 import torch.nn as nn
-#from tensorboardX import SummaryWriter
 from torch.utils.tensorboard import SummaryWriter
 
 from DeepQNetwork import DeepQNetwork
