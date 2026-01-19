@@ -1,10 +1,9 @@
 # Tetris Q-Learning
 
-A project implementing Q-Learning for the game Tetris.
+A project implementing Deep Q-Learning for the classic game Tetris.
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Installation](#installation)
 - [Main](#main)
 - [Hardcoded](#hardcoded)
@@ -15,9 +14,6 @@ A project implementing Q-Learning for the game Tetris.
 - [Sources](#sources)
 - [License](#license)
 
-## Overview
-
-This project explores reinforcement learning by applying Q-Learning to the classic game Tetris.
 
 ## Installation 
 
