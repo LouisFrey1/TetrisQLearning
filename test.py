@@ -1,4 +1,3 @@
-
 import argparse
 import torch
 import pygame
@@ -6,7 +5,6 @@ import os.path
 import random
 import constants
 from game import Tetris
-from DeepQNetwork import DeepQNetwork
 
 def get_args():
     parser = argparse.ArgumentParser(
