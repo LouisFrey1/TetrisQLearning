@@ -6,7 +6,6 @@ import pygame
 import constants
 import random
 from game import Tetris
-from DeepQNetwork import DeepQNetwork
 
 
 def get_args():

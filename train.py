@@ -1,17 +1,16 @@
 import argparse
 import os
-from random import random, randint, sample
-
+import pygame
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
+from random import random, randint, sample
+from collections import deque
 
+import constants
 from DeepQNetwork import DeepQNetwork
 from game import Tetris
-from collections import deque
-import pygame
-import constants
 
 
 def get_args():
